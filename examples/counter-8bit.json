@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "name": "8-bit synchronous counter",
+  "mode": "digital",
+  "components": [
+    {
+      "id": "CLOCK1",
+      "type": "CLOCK",
+      "nodes": [
+        "clk"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 261
+    },
+    {
+      "id": "INPUT2",
+      "type": "INPUT",
+      "nodes": [
+        "reset"
+      ],
+      "value": 0,
+      "x": 395,
+      "y": 261
+    },
+    {
+      "id": "INPUT3",
+      "type": "INPUT",
+      "nodes": [
+        "enable"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 261
+    },
+    {
+      "id": "U4",
+      "type": "BLOCK",
+      "nodes": [
+        "clk",
+        "reset",
+        "enable",
+        "q0",
+        "q1",
+        "q2",
+        "q3",
+        "q4",
+        "q5",
+        "q6",
+        "q7"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 261,
+      "libraryId": "counter_8"
+    },
+    {
+      "id": "OUT_q0",
+      "type": "OUTPUT",
+      "nodes": [
+        "q0"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 261
+    },
+    {
+      "id": "OUT_q1",
+      "type": "OUTPUT",
+      "nodes": [
+        "q1"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 537
+    },
+    {
+      "id": "OUT_q2",
+      "type": "OUTPUT",
+      "nodes": [
+        "q2"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 537
+    },
+    {
+      "id": "OUT_q3",
+      "type": "OUTPUT",
+      "nodes": [
+        "q3"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 537
+    },
+    {
+      "id": "OUT_q4",
+      "type": "OUTPUT",
+      "nodes": [
+        "q4"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 537
+    },
+    {
+      "id": "OUT_q5",
+      "type": "OUTPUT",
+      "nodes": [
+        "q5"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 537
+    },
+    {
+      "id": "OUT_q6",
+      "type": "OUTPUT",
+      "nodes": [
+        "q6"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 767
+    },
+    {
+      "id": "OUT_q7",
+      "type": "OUTPUT",
+      "nodes": [
+        "q7"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 767
+    }
+  ],
+  "wires": []
+}

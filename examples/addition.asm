@@ -1,0 +1,6 @@
+LDI 5
+STA 16
+LDI 3
+ADD 16
+OUT
+HLT

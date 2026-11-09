@@ -1,0 +1,28 @@
+{
+  "initial": "IDLE",
+  "states": [
+    "IDLE",
+    "RUN",
+    "DONE"
+  ],
+  "transitions": [
+    {
+      "from": "IDLE",
+      "input": "start",
+      "to": "RUN",
+      "output": "busy"
+    },
+    {
+      "from": "RUN",
+      "input": "finish",
+      "to": "DONE",
+      "output": "ready"
+    },
+    {
+      "from": "DONE",
+      "input": "reset",
+      "to": "IDLE",
+      "output": "idle"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+name: Verify
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install simulator verification tools
+        run: sudo apt-get update && sudo apt-get install -y iverilog ngspice
+      - run: node scripts/check.mjs
+      - run: node --test

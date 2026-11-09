@@ -1,0 +1,372 @@
+{
+  "version": 1,
+  "name": "8-bit arithmetic / logic unit",
+  "mode": "digital",
+  "components": [
+    {
+      "id": "INPUT1",
+      "type": "INPUT",
+      "nodes": [
+        "a0"
+      ],
+      "value": 0,
+      "x": 150,
+      "y": 215
+    },
+    {
+      "id": "INPUT2",
+      "type": "INPUT",
+      "nodes": [
+        "a1"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 215
+    },
+    {
+      "id": "INPUT3",
+      "type": "INPUT",
+      "nodes": [
+        "a2"
+      ],
+      "value": 0,
+      "x": 640,
+      "y": 215
+    },
+    {
+      "id": "INPUT4",
+      "type": "INPUT",
+      "nodes": [
+        "a3"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 215
+    },
+    {
+      "id": "INPUT5",
+      "type": "INPUT",
+      "nodes": [
+        "a4"
+      ],
+      "value": 0,
+      "x": 1130,
+      "y": 215
+    },
+    {
+      "id": "INPUT6",
+      "type": "INPUT",
+      "nodes": [
+        "a5"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 445
+    },
+    {
+      "id": "INPUT7",
+      "type": "INPUT",
+      "nodes": [
+        "a6"
+      ],
+      "value": 0,
+      "x": 395,
+      "y": 445
+    },
+    {
+      "id": "INPUT8",
+      "type": "INPUT",
+      "nodes": [
+        "a7"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 445
+    },
+    {
+      "id": "INPUT9",
+      "type": "INPUT",
+      "nodes": [
+        "b0"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 445
+    },
+    {
+      "id": "INPUT10",
+      "type": "INPUT",
+      "nodes": [
+        "b1"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 445
+    },
+    {
+      "id": "INPUT11",
+      "type": "INPUT",
+      "nodes": [
+        "b2"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 675
+    },
+    {
+      "id": "INPUT12",
+      "type": "INPUT",
+      "nodes": [
+        "b3"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 675
+    },
+    {
+      "id": "INPUT13",
+      "type": "INPUT",
+      "nodes": [
+        "b4"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 675
+    },
+    {
+      "id": "INPUT14",
+      "type": "INPUT",
+      "nodes": [
+        "b5"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 675
+    },
+    {
+      "id": "INPUT15",
+      "type": "INPUT",
+      "nodes": [
+        "b6"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 675
+    },
+    {
+      "id": "INPUT16",
+      "type": "INPUT",
+      "nodes": [
+        "b7"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 1036.5
+    },
+    {
+      "id": "INPUT17",
+      "type": "INPUT",
+      "nodes": [
+        "select"
+      ],
+      "value": 0,
+      "x": 395,
+      "y": 1036.5
+    },
+    {
+      "id": "U18",
+      "type": "BLOCK",
+      "nodes": [
+        "a0",
+        "a1",
+        "a2",
+        "a3",
+        "a4",
+        "a5",
+        "a6",
+        "a7",
+        "b0",
+        "b1",
+        "b2",
+        "b3",
+        "b4",
+        "b5",
+        "b6",
+        "b7",
+        "sum0",
+        "sum1",
+        "sum2",
+        "sum3",
+        "sum4",
+        "sum5",
+        "sum6",
+        "sum7",
+        "carry"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 1036.5,
+      "libraryId": "adder_8"
+    },
+    {
+      "id": "U19",
+      "type": "BLOCK",
+      "nodes": [
+        "a0",
+        "a1",
+        "a2",
+        "a3",
+        "a4",
+        "a5",
+        "a6",
+        "a7",
+        "b0",
+        "b1",
+        "b2",
+        "b3",
+        "b4",
+        "b5",
+        "b6",
+        "b7",
+        "and0",
+        "and1",
+        "and2",
+        "and3",
+        "and4",
+        "and5",
+        "and6",
+        "and7"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 1036.5,
+      "libraryId": "andbus_8"
+    },
+    {
+      "id": "U20",
+      "type": "BLOCK",
+      "nodes": [
+        "sum0",
+        "sum1",
+        "sum2",
+        "sum3",
+        "sum4",
+        "sum5",
+        "sum6",
+        "sum7",
+        "and0",
+        "and1",
+        "and2",
+        "and3",
+        "and4",
+        "and5",
+        "and6",
+        "and7",
+        "select",
+        "result0",
+        "result1",
+        "result2",
+        "result3",
+        "result4",
+        "result5",
+        "result6",
+        "result7"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 1036.5,
+      "libraryId": "mux2_8"
+    },
+    {
+      "id": "OUT_result0",
+      "type": "OUTPUT",
+      "nodes": [
+        "result0"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 1398
+    },
+    {
+      "id": "OUT_result1",
+      "type": "OUTPUT",
+      "nodes": [
+        "result1"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 1398
+    },
+    {
+      "id": "OUT_result2",
+      "type": "OUTPUT",
+      "nodes": [
+        "result2"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 1398
+    },
+    {
+      "id": "OUT_result3",
+      "type": "OUTPUT",
+      "nodes": [
+        "result3"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 1398
+    },
+    {
+      "id": "OUT_result4",
+      "type": "OUTPUT",
+      "nodes": [
+        "result4"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 1398
+    },
+    {
+      "id": "OUT_result5",
+      "type": "OUTPUT",
+      "nodes": [
+        "result5"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 1628
+    },
+    {
+      "id": "OUT_result6",
+      "type": "OUTPUT",
+      "nodes": [
+        "result6"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 1628
+    },
+    {
+      "id": "OUT_result7",
+      "type": "OUTPUT",
+      "nodes": [
+        "result7"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 1628
+    },
+    {
+      "id": "OUT_carry",
+      "type": "OUTPUT",
+      "nodes": [
+        "carry"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 1628
+    }
+  ],
+  "wires": []
+}

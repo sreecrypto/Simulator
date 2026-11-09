@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "name": "RC low-pass filter",
+  "mode": "analog",
+  "components": [
+    {
+      "id": "V1",
+      "type": "V",
+      "x": 180,
+      "y": 210,
+      "nodes": [
+        "in",
+        "0"
+      ],
+      "value": 5,
+      "wave": "pulse",
+      "frequency": 100
+    },
+    {
+      "id": "R1",
+      "type": "R",
+      "x": 400,
+      "y": 150,
+      "nodes": [
+        "in",
+        "out"
+      ],
+      "value": 1000
+    },
+    {
+      "id": "C1",
+      "type": "C",
+      "x": 620,
+      "y": 270,
+      "nodes": [
+        "out",
+        "0"
+      ],
+      "value": 0.000001
+    }
+  ],
+  "wires": []
+}

@@ -1,0 +1,1468 @@
+{
+  "version": 1,
+  "name": "16-bit ripple-carry adder",
+  "mode": "digital",
+  "components": [
+    {
+      "id": "INPUT1",
+      "type": "INPUT",
+      "nodes": [
+        "carry0"
+      ],
+      "value": 0,
+      "x": 150,
+      "y": 215
+    },
+    {
+      "id": "INPUT2",
+      "type": "INPUT",
+      "nodes": [
+        "a0"
+      ],
+      "value": 0,
+      "x": 395,
+      "y": 215
+    },
+    {
+      "id": "INPUT3",
+      "type": "INPUT",
+      "nodes": [
+        "b0"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 215
+    },
+    {
+      "id": "XOR4",
+      "type": "XOR",
+      "nodes": [
+        "a0",
+        "b0",
+        "xor0"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 215
+    },
+    {
+      "id": "XOR5",
+      "type": "XOR",
+      "nodes": [
+        "xor0",
+        "carry0",
+        "sum0"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 215
+    },
+    {
+      "id": "AND6",
+      "type": "AND",
+      "nodes": [
+        "a0",
+        "b0",
+        "gen0"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 445
+    },
+    {
+      "id": "AND7",
+      "type": "AND",
+      "nodes": [
+        "xor0",
+        "carry0",
+        "prop0"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 445
+    },
+    {
+      "id": "OR8",
+      "type": "OR",
+      "nodes": [
+        "gen0",
+        "prop0",
+        "carry1"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 445
+    },
+    {
+      "id": "OUT_sum0",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum0"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 445
+    },
+    {
+      "id": "INPUT10",
+      "type": "INPUT",
+      "nodes": [
+        "a1"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 445
+    },
+    {
+      "id": "INPUT11",
+      "type": "INPUT",
+      "nodes": [
+        "b1"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 675
+    },
+    {
+      "id": "XOR12",
+      "type": "XOR",
+      "nodes": [
+        "a1",
+        "b1",
+        "xor1"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 675
+    },
+    {
+      "id": "XOR13",
+      "type": "XOR",
+      "nodes": [
+        "xor1",
+        "carry1",
+        "sum1"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 675
+    },
+    {
+      "id": "AND14",
+      "type": "AND",
+      "nodes": [
+        "a1",
+        "b1",
+        "gen1"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 675
+    },
+    {
+      "id": "AND15",
+      "type": "AND",
+      "nodes": [
+        "xor1",
+        "carry1",
+        "prop1"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 675
+    },
+    {
+      "id": "OR16",
+      "type": "OR",
+      "nodes": [
+        "gen1",
+        "prop1",
+        "carry2"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 905
+    },
+    {
+      "id": "OUT_sum1",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum1"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 905
+    },
+    {
+      "id": "INPUT18",
+      "type": "INPUT",
+      "nodes": [
+        "a2"
+      ],
+      "value": 0,
+      "x": 640,
+      "y": 905
+    },
+    {
+      "id": "INPUT19",
+      "type": "INPUT",
+      "nodes": [
+        "b2"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 905
+    },
+    {
+      "id": "XOR20",
+      "type": "XOR",
+      "nodes": [
+        "a2",
+        "b2",
+        "xor2"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 905
+    },
+    {
+      "id": "XOR21",
+      "type": "XOR",
+      "nodes": [
+        "xor2",
+        "carry2",
+        "sum2"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 1135
+    },
+    {
+      "id": "AND22",
+      "type": "AND",
+      "nodes": [
+        "a2",
+        "b2",
+        "gen2"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 1135
+    },
+    {
+      "id": "AND23",
+      "type": "AND",
+      "nodes": [
+        "xor2",
+        "carry2",
+        "prop2"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 1135
+    },
+    {
+      "id": "OR24",
+      "type": "OR",
+      "nodes": [
+        "gen2",
+        "prop2",
+        "carry3"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 1135
+    },
+    {
+      "id": "OUT_sum2",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum2"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 1135
+    },
+    {
+      "id": "INPUT26",
+      "type": "INPUT",
+      "nodes": [
+        "a3"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 1365
+    },
+    {
+      "id": "INPUT27",
+      "type": "INPUT",
+      "nodes": [
+        "b3"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 1365
+    },
+    {
+      "id": "XOR28",
+      "type": "XOR",
+      "nodes": [
+        "a3",
+        "b3",
+        "xor3"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 1365
+    },
+    {
+      "id": "XOR29",
+      "type": "XOR",
+      "nodes": [
+        "xor3",
+        "carry3",
+        "sum3"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 1365
+    },
+    {
+      "id": "AND30",
+      "type": "AND",
+      "nodes": [
+        "a3",
+        "b3",
+        "gen3"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 1365
+    },
+    {
+      "id": "AND31",
+      "type": "AND",
+      "nodes": [
+        "xor3",
+        "carry3",
+        "prop3"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 1595
+    },
+    {
+      "id": "OR32",
+      "type": "OR",
+      "nodes": [
+        "gen3",
+        "prop3",
+        "carry4"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 1595
+    },
+    {
+      "id": "OUT_sum3",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum3"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 1595
+    },
+    {
+      "id": "INPUT34",
+      "type": "INPUT",
+      "nodes": [
+        "a4"
+      ],
+      "value": 0,
+      "x": 885,
+      "y": 1595
+    },
+    {
+      "id": "INPUT35",
+      "type": "INPUT",
+      "nodes": [
+        "b4"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 1595
+    },
+    {
+      "id": "XOR36",
+      "type": "XOR",
+      "nodes": [
+        "a4",
+        "b4",
+        "xor4"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 1825
+    },
+    {
+      "id": "XOR37",
+      "type": "XOR",
+      "nodes": [
+        "xor4",
+        "carry4",
+        "sum4"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 1825
+    },
+    {
+      "id": "AND38",
+      "type": "AND",
+      "nodes": [
+        "a4",
+        "b4",
+        "gen4"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 1825
+    },
+    {
+      "id": "AND39",
+      "type": "AND",
+      "nodes": [
+        "xor4",
+        "carry4",
+        "prop4"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 1825
+    },
+    {
+      "id": "OR40",
+      "type": "OR",
+      "nodes": [
+        "gen4",
+        "prop4",
+        "carry5"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 1825
+    },
+    {
+      "id": "OUT_sum4",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum4"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 2055
+    },
+    {
+      "id": "INPUT42",
+      "type": "INPUT",
+      "nodes": [
+        "a5"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 2055
+    },
+    {
+      "id": "INPUT43",
+      "type": "INPUT",
+      "nodes": [
+        "b5"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 2055
+    },
+    {
+      "id": "XOR44",
+      "type": "XOR",
+      "nodes": [
+        "a5",
+        "b5",
+        "xor5"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 2055
+    },
+    {
+      "id": "XOR45",
+      "type": "XOR",
+      "nodes": [
+        "xor5",
+        "carry5",
+        "sum5"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 2055
+    },
+    {
+      "id": "AND46",
+      "type": "AND",
+      "nodes": [
+        "a5",
+        "b5",
+        "gen5"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 2285
+    },
+    {
+      "id": "AND47",
+      "type": "AND",
+      "nodes": [
+        "xor5",
+        "carry5",
+        "prop5"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 2285
+    },
+    {
+      "id": "OR48",
+      "type": "OR",
+      "nodes": [
+        "gen5",
+        "prop5",
+        "carry6"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 2285
+    },
+    {
+      "id": "OUT_sum5",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum5"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 2285
+    },
+    {
+      "id": "INPUT50",
+      "type": "INPUT",
+      "nodes": [
+        "a6"
+      ],
+      "value": 0,
+      "x": 1130,
+      "y": 2285
+    },
+    {
+      "id": "INPUT51",
+      "type": "INPUT",
+      "nodes": [
+        "b6"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 2515
+    },
+    {
+      "id": "XOR52",
+      "type": "XOR",
+      "nodes": [
+        "a6",
+        "b6",
+        "xor6"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 2515
+    },
+    {
+      "id": "XOR53",
+      "type": "XOR",
+      "nodes": [
+        "xor6",
+        "carry6",
+        "sum6"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 2515
+    },
+    {
+      "id": "AND54",
+      "type": "AND",
+      "nodes": [
+        "a6",
+        "b6",
+        "gen6"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 2515
+    },
+    {
+      "id": "AND55",
+      "type": "AND",
+      "nodes": [
+        "xor6",
+        "carry6",
+        "prop6"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 2515
+    },
+    {
+      "id": "OR56",
+      "type": "OR",
+      "nodes": [
+        "gen6",
+        "prop6",
+        "carry7"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 2745
+    },
+    {
+      "id": "OUT_sum6",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum6"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 2745
+    },
+    {
+      "id": "INPUT58",
+      "type": "INPUT",
+      "nodes": [
+        "a7"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 2745
+    },
+    {
+      "id": "INPUT59",
+      "type": "INPUT",
+      "nodes": [
+        "b7"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 2745
+    },
+    {
+      "id": "XOR60",
+      "type": "XOR",
+      "nodes": [
+        "a7",
+        "b7",
+        "xor7"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 2745
+    },
+    {
+      "id": "XOR61",
+      "type": "XOR",
+      "nodes": [
+        "xor7",
+        "carry7",
+        "sum7"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 2975
+    },
+    {
+      "id": "AND62",
+      "type": "AND",
+      "nodes": [
+        "a7",
+        "b7",
+        "gen7"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 2975
+    },
+    {
+      "id": "AND63",
+      "type": "AND",
+      "nodes": [
+        "xor7",
+        "carry7",
+        "prop7"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 2975
+    },
+    {
+      "id": "OR64",
+      "type": "OR",
+      "nodes": [
+        "gen7",
+        "prop7",
+        "carry8"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 2975
+    },
+    {
+      "id": "OUT_sum7",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum7"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 2975
+    },
+    {
+      "id": "INPUT66",
+      "type": "INPUT",
+      "nodes": [
+        "a8"
+      ],
+      "value": 0,
+      "x": 150,
+      "y": 3205
+    },
+    {
+      "id": "INPUT67",
+      "type": "INPUT",
+      "nodes": [
+        "b8"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 3205
+    },
+    {
+      "id": "XOR68",
+      "type": "XOR",
+      "nodes": [
+        "a8",
+        "b8",
+        "xor8"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 3205
+    },
+    {
+      "id": "XOR69",
+      "type": "XOR",
+      "nodes": [
+        "xor8",
+        "carry8",
+        "sum8"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 3205
+    },
+    {
+      "id": "AND70",
+      "type": "AND",
+      "nodes": [
+        "a8",
+        "b8",
+        "gen8"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 3205
+    },
+    {
+      "id": "AND71",
+      "type": "AND",
+      "nodes": [
+        "xor8",
+        "carry8",
+        "prop8"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 3435
+    },
+    {
+      "id": "OR72",
+      "type": "OR",
+      "nodes": [
+        "gen8",
+        "prop8",
+        "carry9"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 3435
+    },
+    {
+      "id": "OUT_sum8",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum8"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 3435
+    },
+    {
+      "id": "INPUT74",
+      "type": "INPUT",
+      "nodes": [
+        "a9"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 3435
+    },
+    {
+      "id": "INPUT75",
+      "type": "INPUT",
+      "nodes": [
+        "b9"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 3435
+    },
+    {
+      "id": "XOR76",
+      "type": "XOR",
+      "nodes": [
+        "a9",
+        "b9",
+        "xor9"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 3665
+    },
+    {
+      "id": "XOR77",
+      "type": "XOR",
+      "nodes": [
+        "xor9",
+        "carry9",
+        "sum9"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 3665
+    },
+    {
+      "id": "AND78",
+      "type": "AND",
+      "nodes": [
+        "a9",
+        "b9",
+        "gen9"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 3665
+    },
+    {
+      "id": "AND79",
+      "type": "AND",
+      "nodes": [
+        "xor9",
+        "carry9",
+        "prop9"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 3665
+    },
+    {
+      "id": "OR80",
+      "type": "OR",
+      "nodes": [
+        "gen9",
+        "prop9",
+        "carry10"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 3665
+    },
+    {
+      "id": "OUT_sum9",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum9"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 3895
+    },
+    {
+      "id": "INPUT82",
+      "type": "INPUT",
+      "nodes": [
+        "a10"
+      ],
+      "value": 0,
+      "x": 395,
+      "y": 3895
+    },
+    {
+      "id": "INPUT83",
+      "type": "INPUT",
+      "nodes": [
+        "b10"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 3895
+    },
+    {
+      "id": "XOR84",
+      "type": "XOR",
+      "nodes": [
+        "a10",
+        "b10",
+        "xor10"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 3895
+    },
+    {
+      "id": "XOR85",
+      "type": "XOR",
+      "nodes": [
+        "xor10",
+        "carry10",
+        "sum10"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 3895
+    },
+    {
+      "id": "AND86",
+      "type": "AND",
+      "nodes": [
+        "a10",
+        "b10",
+        "gen10"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 4125
+    },
+    {
+      "id": "AND87",
+      "type": "AND",
+      "nodes": [
+        "xor10",
+        "carry10",
+        "prop10"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 4125
+    },
+    {
+      "id": "OR88",
+      "type": "OR",
+      "nodes": [
+        "gen10",
+        "prop10",
+        "carry11"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 4125
+    },
+    {
+      "id": "OUT_sum10",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum10"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 4125
+    },
+    {
+      "id": "INPUT90",
+      "type": "INPUT",
+      "nodes": [
+        "a11"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 4125
+    },
+    {
+      "id": "INPUT91",
+      "type": "INPUT",
+      "nodes": [
+        "b11"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 4355
+    },
+    {
+      "id": "XOR92",
+      "type": "XOR",
+      "nodes": [
+        "a11",
+        "b11",
+        "xor11"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 4355
+    },
+    {
+      "id": "XOR93",
+      "type": "XOR",
+      "nodes": [
+        "xor11",
+        "carry11",
+        "sum11"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 4355
+    },
+    {
+      "id": "AND94",
+      "type": "AND",
+      "nodes": [
+        "a11",
+        "b11",
+        "gen11"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 4355
+    },
+    {
+      "id": "AND95",
+      "type": "AND",
+      "nodes": [
+        "xor11",
+        "carry11",
+        "prop11"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 4355
+    },
+    {
+      "id": "OR96",
+      "type": "OR",
+      "nodes": [
+        "gen11",
+        "prop11",
+        "carry12"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 4585
+    },
+    {
+      "id": "OUT_sum11",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum11"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 4585
+    },
+    {
+      "id": "INPUT98",
+      "type": "INPUT",
+      "nodes": [
+        "a12"
+      ],
+      "value": 0,
+      "x": 640,
+      "y": 4585
+    },
+    {
+      "id": "INPUT99",
+      "type": "INPUT",
+      "nodes": [
+        "b12"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 4585
+    },
+    {
+      "id": "XOR100",
+      "type": "XOR",
+      "nodes": [
+        "a12",
+        "b12",
+        "xor12"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 4585
+    },
+    {
+      "id": "XOR101",
+      "type": "XOR",
+      "nodes": [
+        "xor12",
+        "carry12",
+        "sum12"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 4815
+    },
+    {
+      "id": "AND102",
+      "type": "AND",
+      "nodes": [
+        "a12",
+        "b12",
+        "gen12"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 4815
+    },
+    {
+      "id": "AND103",
+      "type": "AND",
+      "nodes": [
+        "xor12",
+        "carry12",
+        "prop12"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 4815
+    },
+    {
+      "id": "OR104",
+      "type": "OR",
+      "nodes": [
+        "gen12",
+        "prop12",
+        "carry13"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 4815
+    },
+    {
+      "id": "OUT_sum12",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum12"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 4815
+    },
+    {
+      "id": "INPUT106",
+      "type": "INPUT",
+      "nodes": [
+        "a13"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 5045
+    },
+    {
+      "id": "INPUT107",
+      "type": "INPUT",
+      "nodes": [
+        "b13"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 5045
+    },
+    {
+      "id": "XOR108",
+      "type": "XOR",
+      "nodes": [
+        "a13",
+        "b13",
+        "xor13"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 5045
+    },
+    {
+      "id": "XOR109",
+      "type": "XOR",
+      "nodes": [
+        "xor13",
+        "carry13",
+        "sum13"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 5045
+    },
+    {
+      "id": "AND110",
+      "type": "AND",
+      "nodes": [
+        "a13",
+        "b13",
+        "gen13"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 5045
+    },
+    {
+      "id": "AND111",
+      "type": "AND",
+      "nodes": [
+        "xor13",
+        "carry13",
+        "prop13"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 5275
+    },
+    {
+      "id": "OR112",
+      "type": "OR",
+      "nodes": [
+        "gen13",
+        "prop13",
+        "carry14"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 5275
+    },
+    {
+      "id": "OUT_sum13",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum13"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 5275
+    },
+    {
+      "id": "INPUT114",
+      "type": "INPUT",
+      "nodes": [
+        "a14"
+      ],
+      "value": 0,
+      "x": 885,
+      "y": 5275
+    },
+    {
+      "id": "INPUT115",
+      "type": "INPUT",
+      "nodes": [
+        "b14"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 5275
+    },
+    {
+      "id": "XOR116",
+      "type": "XOR",
+      "nodes": [
+        "a14",
+        "b14",
+        "xor14"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 5505
+    },
+    {
+      "id": "XOR117",
+      "type": "XOR",
+      "nodes": [
+        "xor14",
+        "carry14",
+        "sum14"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 5505
+    },
+    {
+      "id": "AND118",
+      "type": "AND",
+      "nodes": [
+        "a14",
+        "b14",
+        "gen14"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 5505
+    },
+    {
+      "id": "AND119",
+      "type": "AND",
+      "nodes": [
+        "xor14",
+        "carry14",
+        "prop14"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 5505
+    },
+    {
+      "id": "OR120",
+      "type": "OR",
+      "nodes": [
+        "gen14",
+        "prop14",
+        "carry15"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 5505
+    },
+    {
+      "id": "OUT_sum14",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum14"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 5735
+    },
+    {
+      "id": "INPUT122",
+      "type": "INPUT",
+      "nodes": [
+        "a15"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 5735
+    },
+    {
+      "id": "INPUT123",
+      "type": "INPUT",
+      "nodes": [
+        "b15"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 5735
+    },
+    {
+      "id": "XOR124",
+      "type": "XOR",
+      "nodes": [
+        "a15",
+        "b15",
+        "xor15"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 5735
+    },
+    {
+      "id": "XOR125",
+      "type": "XOR",
+      "nodes": [
+        "xor15",
+        "carry15",
+        "sum15"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 5735
+    },
+    {
+      "id": "AND126",
+      "type": "AND",
+      "nodes": [
+        "a15",
+        "b15",
+        "gen15"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 5965
+    },
+    {
+      "id": "AND127",
+      "type": "AND",
+      "nodes": [
+        "xor15",
+        "carry15",
+        "prop15"
+      ],
+      "value": 1,
+      "x": 395,
+      "y": 5965
+    },
+    {
+      "id": "OR128",
+      "type": "OR",
+      "nodes": [
+        "gen15",
+        "prop15",
+        "carry16"
+      ],
+      "value": 1,
+      "x": 640,
+      "y": 5965
+    },
+    {
+      "id": "OUT_sum15",
+      "type": "OUTPUT",
+      "nodes": [
+        "sum15"
+      ],
+      "value": 1,
+      "x": 885,
+      "y": 5965
+    },
+    {
+      "id": "OUT_carry16",
+      "type": "OUTPUT",
+      "nodes": [
+        "carry16"
+      ],
+      "value": 1,
+      "x": 1130,
+      "y": 5965
+    }
+  ],
+  "wires": []
+}

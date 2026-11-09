@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "name": "5 V voltage divider",
+  "mode": "analog",
+  "components": [
+    {
+      "id": "V1",
+      "type": "V",
+      "x": 160,
+      "y": 220,
+      "nodes": [
+        "in",
+        "0"
+      ],
+      "value": 5
+    },
+    {
+      "id": "R1",
+      "type": "R",
+      "x": 390,
+      "y": 150,
+      "nodes": [
+        "in",
+        "out"
+      ],
+      "value": 10000
+    },
+    {
+      "id": "R2",
+      "type": "R",
+      "x": 610,
+      "y": 260,
+      "nodes": [
+        "out",
+        "0"
+      ],
+      "value": 10000
+    }
+  ],
+  "wires": []
+}

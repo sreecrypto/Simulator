@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "name": "Half adder",
+  "mode": "digital",
+  "components": [
+    {
+      "id": "A",
+      "type": "INPUT",
+      "x": 140,
+      "y": 140,
+      "nodes": [
+        "a"
+      ],
+      "value": 0
+    },
+    {
+      "id": "B",
+      "type": "INPUT",
+      "x": 140,
+      "y": 330,
+      "nodes": [
+        "b"
+      ],
+      "value": 1
+    },
+    {
+      "id": "X1",
+      "type": "XOR",
+      "x": 420,
+      "y": 140,
+      "nodes": [
+        "a",
+        "b",
+        "sum"
+      ],
+      "value": 1
+    },
+    {
+      "id": "G1",
+      "type": "AND",
+      "x": 420,
+      "y": 330,
+      "nodes": [
+        "a",
+        "b",
+        "carry"
+      ],
+      "value": 1
+    },
+    {
+      "id": "SUM",
+      "type": "OUTPUT",
+      "x": 730,
+      "y": 140,
+      "nodes": [
+        "sum"
+      ],
+      "value": 1
+    },
+    {
+      "id": "CARRY",
+      "type": "OUTPUT",
+      "x": 730,
+      "y": 330,
+      "nodes": [
+        "carry"
+      ],
+      "value": 1
+    }
+  ],
+  "wires": []
+}

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "name": "D flip-flop",
+  "mode": "digital",
+  "components": [
+    {
+      "id": "D",
+      "type": "INPUT",
+      "x": 140,
+      "y": 150,
+      "nodes": [
+        "d"
+      ],
+      "value": 1
+    },
+    {
+      "id": "CLK",
+      "type": "CLOCK",
+      "x": 140,
+      "y": 330,
+      "nodes": [
+        "clk"
+      ],
+      "value": 1
+    },
+    {
+      "id": "FF1",
+      "type": "DFF",
+      "x": 430,
+      "y": 230,
+      "nodes": [
+        "d",
+        "clk",
+        "q"
+      ],
+      "value": 1
+    },
+    {
+      "id": "Q",
+      "type": "OUTPUT",
+      "x": 740,
+      "y": 230,
+      "nodes": [
+        "q"
+      ],
+      "value": 1
+    }
+  ],
+  "wires": []
+}

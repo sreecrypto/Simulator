@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "name": "RLC step response",
+  "mode": "analog",
+  "components": [
+    {
+      "id": "V1",
+      "type": "V",
+      "x": 140,
+      "y": 210,
+      "nodes": [
+        "in",
+        "0"
+      ],
+      "value": 5
+    },
+    {
+      "id": "R1",
+      "type": "R",
+      "x": 340,
+      "y": 140,
+      "nodes": [
+        "in",
+        "n1"
+      ],
+      "value": 100
+    },
+    {
+      "id": "L1",
+      "type": "L",
+      "x": 540,
+      "y": 140,
+      "nodes": [
+        "n1",
+        "out"
+      ],
+      "value": 0.01
+    },
+    {
+      "id": "C1",
+      "type": "C",
+      "x": 730,
+      "y": 270,
+      "nodes": [
+        "out",
+        "0"
+      ],
+      "value": 0.000001
+    }
+  ],
+  "wires": []
+}

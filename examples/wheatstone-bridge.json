@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "name": "Wheatstone bridge with differential amplifier",
+  "mode": "analog",
+  "components": [
+    {
+      "id": "V1",
+      "type": "V",
+      "nodes": [
+        "vcc",
+        "0"
+      ],
+      "value": 5,
+      "x": 150,
+      "y": 215
+    },
+    {
+      "id": "R2",
+      "type": "R",
+      "nodes": [
+        "vcc",
+        "left"
+      ],
+      "value": 1000,
+      "x": 395,
+      "y": 215
+    },
+    {
+      "id": "R3",
+      "type": "R",
+      "nodes": [
+        "left",
+        "0"
+      ],
+      "value": 1000,
+      "x": 640,
+      "y": 215
+    },
+    {
+      "id": "R4",
+      "type": "R",
+      "nodes": [
+        "vcc",
+        "right"
+      ],
+      "value": 1000,
+      "x": 885,
+      "y": 215
+    },
+    {
+      "id": "R5",
+      "type": "R",
+      "nodes": [
+        "right",
+        "0"
+      ],
+      "value": 1100,
+      "x": 1130,
+      "y": 215
+    },
+    {
+      "id": "E6",
+      "type": "E",
+      "nodes": [
+        "out",
+        "0",
+        "right",
+        "left"
+      ],
+      "value": 10,
+      "x": 150,
+      "y": 445
+    },
+    {
+      "id": "R7",
+      "type": "R",
+      "nodes": [
+        "out",
+        "0"
+      ],
+      "value": 10000,
+      "x": 395,
+      "y": 445
+    }
+  ],
+  "wires": []
+}

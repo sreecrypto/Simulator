@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "name": "3-stage active RC filter",
+  "mode": "analog",
+  "components": [
+    {
+      "id": "V1",
+      "type": "V",
+      "nodes": [
+        "in",
+        "0"
+      ],
+      "value": 1,
+      "x": 150,
+      "y": 215,
+      "wave": "sine",
+      "frequency": 1000
+    },
+    {
+      "id": "R2",
+      "type": "R",
+      "nodes": [
+        "in",
+        "lp0"
+      ],
+      "value": 1000,
+      "x": 395,
+      "y": 215
+    },
+    {
+      "id": "C3",
+      "type": "C",
+      "nodes": [
+        "lp0",
+        "0"
+      ],
+      "value": 1.5915494309189535e-7,
+      "x": 640,
+      "y": 215
+    },
+    {
+      "id": "E4",
+      "type": "E",
+      "nodes": [
+        "stage0",
+        "0",
+        "lp0",
+        "0"
+      ],
+      "value": 2,
+      "x": 885,
+      "y": 215
+    },
+    {
+      "id": "R5",
+      "type": "R",
+      "nodes": [
+        "stage0",
+        "lp1"
+      ],
+      "value": 1000,
+      "x": 1130,
+      "y": 215
+    },
+    {
+      "id": "C6",
+      "type": "C",
+      "nodes": [
+        "lp1",
+        "0"
+      ],
+      "value": 1.5915494309189535e-7,
+      "x": 150,
+      "y": 445
+    },
+    {
+      "id": "E7",
+      "type": "E",
+      "nodes": [
+        "stage1",
+        "0",
+        "lp1",
+        "0"
+      ],
+      "value": 2,
+      "x": 395,
+      "y": 445
+    },
+    {
+      "id": "R8",
+      "type": "R",
+      "nodes": [
+        "stage1",
+        "lp2"
+      ],
+      "value": 1000,
+      "x": 640,
+      "y": 445
+    },
+    {
+      "id": "C9",
+      "type": "C",
+      "nodes": [
+        "lp2",
+        "0"
+      ],
+      "value": 1.5915494309189535e-7,
+      "x": 885,
+      "y": 445
+    },
+    {
+      "id": "E10",
+      "type": "E",
+      "nodes": [
+        "out",
+        "0",
+        "lp2",
+        "0"
+      ],
+      "value": 2,
+      "x": 1130,
+      "y": 445
+    }
+  ],
+  "wires": []
+}
