@@ -9,8 +9,14 @@ test('local server serves the workbench, hides private files, and blocks cross-o
   try {
     const page=await fetch(base);assert.equal(page.status,200);assert.match(await page.text(),/Circuit Studio/);
     for(const p of ['/server.mjs','/.env','/.git/config','/package.json'])assert.equal((await fetch(base+p)).status,404);
-    assert.equal((await fetch(base+'/src/app.js')).status,200);
-    assert.equal((await fetch(base+'/src/fonts.css')).status,200);
+    const script=await fetch(base+'/assets/workbench.js');
+    assert.equal(script.status,200);
+    assert.match(script.headers.get('content-type'),/javascript/);
+    assert.match(await script.text(),/SchematicWorkspace|circuit-workspace/);
+    const stylesheet=await fetch(base+'/assets/workbench.css');
+    assert.equal(stylesheet.status,200);
+    assert.match(await stylesheet.text(),/\.timing-plot/);
+    assert.equal((await fetch(base+'/src/app.js')).status,404);
     assert.equal((await fetch(base+'/api/status')).status,200);
     assert.equal((await fetch(base+'/api/assistant',{method:'POST',headers:{Origin:'https://example.com'}})).status,403);
   }finally {await new Promise(resolve=>server.close(resolve));}
@@ -55,5 +61,52 @@ test('AI adapter validates generated projects and handles upstream failures',asy
     if(oldModel===undefined)delete process.env.OLLAMA_MODEL;else process.env.OLLAMA_MODEL=oldModel;
     if(oldURL===undefined)delete process.env.OLLAMA_URL;else process.env.OLLAMA_URL=oldURL;
     await new Promise(resolve=>server.close(resolve));
+  }
+});
+
+test('Ollama discovers an installed local model and validates a compact circuit proposal', async () => {
+  const originalFetch = globalThis.fetch;
+  const oldModel = process.env.OLLAMA_MODEL;
+  const oldURL = process.env.OLLAMA_URL;
+  delete process.env.OLLAMA_MODEL;
+  process.env.OLLAMA_URL = 'http://ollama.test';
+  globalThis.fetch = async (url, options) => {
+    if (url === 'http://ollama.test/api/tags') return Response.json({
+      models: [{ name: 'other:cloud' }, { name: 'TinyLlama:latest' }],
+    });
+    if (url === 'http://ollama.test/api/chat') {
+      const request = JSON.parse(options.body);
+      assert.equal(request.model, 'TinyLlama:latest');
+      assert.deepEqual(request.format.required, ['explanation', 'circuit']);
+      const { name, mode, components } = cloneExample('divider');
+      const circuit = { name, mode, components: components.map(({ id, type, nodes, value }) => ({ id, type, nodes, value })) };
+      return Response.json({ message: { content: JSON.stringify({ explanation: 'Divider', circuit }) } });
+    }
+    return originalFetch(url, options);
+  };
+  const server = createServer({ engineCheck: async () => false });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const status = await (await originalFetch(base + '/api/status')).json();
+    assert.equal(status.ai, true);
+    assert.equal(status.model, 'TinyLlama:latest');
+    const response = await originalFetch(base + '/api/assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: 'Build a voltage divider.' }),
+    });
+    const result = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(result));
+    assert.equal(result.circuit.version, 1);
+    assert.ok(result.circuit.components.every(part => Number.isFinite(part.x) && Number.isFinite(part.y)));
+    assert.equal(result.verification.passed, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (oldModel === undefined) delete process.env.OLLAMA_MODEL;
+    else process.env.OLLAMA_MODEL = oldModel;
+    if (oldURL === undefined) delete process.env.OLLAMA_URL;
+    else process.env.OLLAMA_URL = oldURL;
+    await new Promise(resolve => server.close(resolve));
   }
 });

@@ -7,6 +7,14 @@ export function verifyProposal(c){
     operatingPoint(c);transient(c,{duration:.001,steps:8});
     return {passed:true,summary:'DC solve + 8-step transient smoke check passed. Design specifications are not proven.'};
   }
-  const initial=evaluateDigital(c);evaluateDigital(c,{},initial.memory,1);
-  return {passed:true,summary:'Digital connectivity + two clock phases checked. Functional specifications are not proven.'};
+  const inputs=c.components.filter(part=>part.type==='INPUT');
+  const patterns=[()=>0,()=>1,index=>index%2,index=>1-index%2];
+  const vectors=inputs.length?[{},...patterns.map(pattern=>
+    Object.fromEntries(inputs.map((part,index)=>[part.id,pattern(index)])))]:[{}];
+  let memory={};
+  for(const vector of vectors){
+    memory=evaluateDigital(c,vector,memory,0).memory;
+    memory=evaluateDigital(c,vector,memory,1).memory;
+  }
+  return {passed:true,summary:`Digital connectivity and two clock phases checked across ${vectors.length} input patterns. Functional specifications are not proven.`};
 }

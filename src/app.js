@@ -1,10 +1,13 @@
 import {analogTypes,digitalTypes,pins,validateCircuit,parseValue,formatValue,spice} from './model.js';
-import {operatingPoint,transient,acSweep} from './analog.js';
-import {evaluateDigital,truthTable,digitalShape,digitalTimeline} from './digital.js';
+import {evaluateDigital,digitalShape} from './digital.js';
 import {examples,cloneExample} from './examples.js';
 import {recipe} from './assistant.js';
-import {defaultFSM,validateFSM,stepFSM} from './fsm.js';
-import {demoProgram,assemble,newCPU,stepCPU} from './cpu.js';
+import {validateFSM} from './fsm.js';
+import {microcontrollerProject} from './microcontrollers.js';
+import {analogWorkspace,analogPlot} from './workspaces/analog.js';
+import {digitalWorkspace,digitalTable} from './workspaces/digital.js';
+import {bindFSM} from './workspaces/fsm.js';
+import {bindMicrocontrollers} from './workspaces/microcontrollers.js';
 import {catalogFor,catalogById,componentSpec,instantiate,registerResources} from './catalog.js';
 import {arrange} from './builders.js';
 import {validateSession,makeDocument,duplicateDocument} from './workspaces.js';
@@ -22,8 +25,8 @@ const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const labels={R:'Resistor',C:'Capacitor',L:'Inductor',V:'Voltage source',I:'Current source',E:'Voltage amplifier',G:'Transconductance',INPUT:'Logic input',OUTPUT:'Logic output',CLOCK:'Clock',NOT:'NOT gate',AND:'AND gate',OR:'OR gate',XOR:'XOR gate',NAND:'NAND gate',NOR:'NOR gate',XNOR:'XNOR gate',DFF:'D flip-flop'};
 const glyphs={R:'∿',C:'⊣⊢',L:'∩∩',V:'⊕',I:'↑',INPUT:'01',OUTPUT:'◉',CLOCK:'▁▔',NOT:'▷',AND:'&',OR:'≥1',XOR:'=1',NAND:'!&',NOR:'!≥',XNOR:'!=',DFF:'D'};
 let circuit={version:1,name:'Untitled circuit',mode:'analog',components:[],wires:[]}, selected=null, history=[],future=[],tool='select',firstPin=null,lastResult=null,digitalMemory={},tick=0;
-let module='analog',fsm=structuredClone(defaultFSM),fsmState=fsm.initial,cpu=newCPU(),program=assemble(demoProgram),drag=null;
-let fsmLoadedSource='',cpuLoadedSource='',aiAvailable=false,camera=null,session=null;
+let module='analog',drag=null;
+let aiStatus=null,camera=null,session=null;
 const liveDocuments=new Map();let closedDocuments=[];
 let multiSelection=new Set(),ngspiceReady=false,resourceLibrary=[],resourceSources=[];
 let wirePointer=null,wireTarget=null,wireGesture=null;
@@ -52,7 +55,6 @@ function moveWire(e){
 }
 try{resourceLibrary=validateResources(JSON.parse(localStorage.getItem('circuit-studio-resources')||'[]'));registerResources(resourceLibrary);resourceSources=JSON.parse(localStorage.getItem('circuit-studio-resource-sources')||'[]');}catch{/* Damaged resources are not installed. */}
 try {const saved=localStorage.getItem('circuit-studio-project');if(saved)circuit=validateCircuit(JSON.parse(saved));}catch{/* Corrupt storage leaves the starter intact. */}
-const snapshots={analog:circuit.mode==='analog'?structuredClone(circuit):cloneExample('lowpass'),digital:circuit.mode==='digital'?structuredClone(circuit):cloneExample('halfadder')};
 module=circuit.mode;
 let toastTimer;
 function toast(message) {$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,6000);}
@@ -64,14 +66,17 @@ function changed(){validateCircuit(circuit);invalidate();persist();render();}
 function applyCircuit(next){validateCircuit(next);if(next.resources?.length)try{installResources(next.resources);}catch{toast('Models remain embedded in this circuit; the shared resource library is full or has a name conflict.');}if(module!==next.mode){createWorkspace(next.mode,next);return;}remember();circuit=structuredClone(next);selected=null;firstPin=null;camera=null;module=circuit.mode;changed();showModule();}
 function download(name,text,type='text/plain') {const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 const filename=()=>circuit.name.replace(/[^a-z0-9_-]+/gi,'-').toLowerCase()||'circuit';
+const schematicModes={analog:analogWorkspace,digital:digitalWorkspace};
+const frontend={$,escape,guarded,download,saveSession};
+const specialModes={fsm:bindFSM(frontend),cpu:bindMicrocontrollers(frontend)};
 let chatThread=null;
 function activeDocument(){return session?.documents.find(d=>d.id===session.activeId);}
 function captureDocument(){
   const doc=activeDocument();if(!doc)return;
   doc.kind=module;
   if(['analog','digital'].includes(module)){doc.content=structuredClone(circuit);doc.name=circuit.name;}
-  else {doc.content={source:$(module==='fsm'?'fsm-source':'cpu-source').value};}
-  liveDocuments.set(doc.id,{circuit:structuredClone(circuit),history:[...history],future:[...future],selected,lastResult,digitalMemory:structuredClone(digitalMemory),tick,digitalTime,playbackIndex,playbackPosition,autoWindow:$('auto-clock-window').checked,camera:camera?{...camera}:null,chatThread,resultHTML:$('result-body').innerHTML,resultTitle:$('result-title').textContent,analysis:$('analysis').value,probe:$('probe').value,duration:$('duration').value,fsm:structuredClone(fsm),fsmState,fsmSource:$('fsm-source').value,fsmLoadedSource,fsmLog:$('fsm-log').textContent,cpu:structuredClone(cpu),program:structuredClone(program),cpuSource:$('cpu-source').value,cpuLoadedSource});
+  else {doc.content=specialModes[module].content();}
+  liveDocuments.set(doc.id,{circuit:structuredClone(circuit),history:[...history],future:[...future],selected,lastResult,digitalMemory:structuredClone(digitalMemory),tick,digitalTime,playbackIndex,playbackPosition,autoWindow:$('auto-clock-window').checked,camera:camera?{...camera}:null,chatThread,resultHTML:$('result-body').innerHTML,resultTitle:$('result-title').textContent,analysis:$('analysis').value,probe:$('probe').value,duration:$('duration').value,engine:$('engine').value,special:specialModes[module]?.snapshot()});
 }
 function saveSession(){if(!session)return;captureDocument();localStorage.setItem('circuit-studio-workspaces-v1',JSON.stringify(session));renderTabs();}
 function renderTabs(){
@@ -81,24 +86,18 @@ function renderTabs(){
 }
 function restoreDocument(doc){
   stopPlayback();selectionLayer.replaceChildren();
+  specialModes[module]?.suspend();
   const live=liveDocuments.get(doc.id);module=doc.kind;selected=null;firstPin=null;camera=null;drag=null;multiSelection.clear();
   history=live?.history||[];future=live?.future||[];lastResult=live?.lastResult||null;digitalMemory=live?.digitalMemory||{};tick=live?.tick||0;camera=live?.camera||null;
   digitalTime=live?.digitalTime||0;playbackIndex=live?.playbackIndex||0;playbackPosition=live?.playbackPosition||0;$('auto-clock-window').checked=live?.autoWindow??true;
   if(['analog','digital'].includes(module))circuit=structuredClone(validateCircuit(doc.content));else if(live)circuit=structuredClone(live.circuit);
-  if(module==='fsm'){
-    $('fsm-source').value=doc.content.source;
-    if(live){fsm=live.fsm;fsmState=live.fsmState;fsmLoadedSource=live.fsmLoadedSource;$('fsm-log').textContent=live.fsmLog;}
-    else {try{loadFSM();}catch{fsm=structuredClone(defaultFSM);fsmState=fsm.initial;fsmLoadedSource='';$('fsm-log').textContent='Load the edited definition to run.';}}
-    renderFSM();
-  }
-  if(module==='cpu'){
-    $('cpu-source').value=doc.content.source;
-    if(live){cpu=live.cpu;program=live.program;cpuLoadedSource=live.cpuLoadedSource;}
-    else {cpu=newCPU();try{program=assemble(doc.content.source);cpuLoadedSource=doc.content.source;}catch{program=[];cpuLoadedSource='';}}
-    renderCPU();
-  }
+  specialModes[module]?.restore(doc.content,live?.special);
   chatThread=live?.chatThread||document.createElement('div');chatThread.className='chat-thread';$('chat').replaceChildren(chatThread);
-  render();if(live){$('result-body').innerHTML=live.resultHTML;$('result-title').textContent=live.resultTitle;$('analysis').value=live.analysis;$('probe').value=live.probe;$('duration').value=live.duration;}else{$('result-title').textContent='Simulation';$('result-body').replaceChildren();}
+  $('duration').value=live?.duration??'10m';
+  $('engine').value=live?.engine??'builtin';
+  $('analysis').value='';
+  render();if(live){$('result-body').innerHTML=live.resultHTML;$('result-title').textContent=live.resultTitle;$('analysis').value=live.analysis;$('probe').value=live.probe;}else{$('result-title').textContent='Simulation';$('result-body').replaceChildren();}
+  updateAnalysisControls();
   setupPlayback(false);showModule();
 }
 function openWorkspace(id,capture=true){
@@ -107,7 +106,7 @@ function openWorkspace(id,capture=true){
 function createWorkspace(kind=module,preset=null){
   if(session.documents.length>=24)throw new Error('Up to 24 workspaces can be open. Export or close a tab first.');
   captureDocument();
-  const content=preset||(['analog','digital'].includes(kind)?{version:1,name:`Untitled ${kind} ${session.documents.filter(d=>d.kind===kind).length+1}`,mode:kind,components:[],wires:[]}: {source:kind==='fsm'?JSON.stringify(defaultFSM,null,2):demoProgram});
+  const content=preset||(schematicModes[kind]?{version:1,name:`Untitled ${kind} ${session.documents.filter(d=>d.kind===kind).length+1}`,mode:kind,components:[],wires:[]}:specialModes[kind].newProject());
   const doc=makeDocument(kind,content);session.documents.push(doc);openWorkspace(doc.id,false);
 }
 function canvasBounds(){
@@ -202,24 +201,40 @@ function renderInspector(){
   if(source)$('open-generator').onclick=()=>openGenerator(p.id);
 }
 function render(){
-  $('project-name').value=circuit.name;$('mode-label').textContent=circuit.mode.toUpperCase();
+  const mode=schematicModes[circuit.mode];
+  $('project-name').value=circuit.name;$('mode-label').textContent=mode.title;
+  $('mode-library').textContent=mode.library;$('mode-results').textContent=mode.results;$('run').textContent=mode.runLabel;
+  $('circuit-workspace').dataset.mode=circuit.mode;
   $('footer-count').textContent=`${circuit.components.length} components · ${new Set(circuit.components.flatMap(p=>p.nodes)).size} nets`;
   const priorAnalysis=$('analysis').value;
-  $('analysis').innerHTML=circuit.mode==='analog'?'<option value="transient">Transient</option><option value="dc">Operating point</option><option value="ac">AC sweep</option>':'<option value="truth">Truth table</option><option value="tick">Timing / evaluate</option>';
-  if([...$('analysis').options].some(o=>o.value===priorAnalysis))$('analysis').value=priorAnalysis;
-  if(lastResult?.kind && [...$('analysis').options].some(o=>o.value===lastResult.kind))$('analysis').value=lastResult.kind;
-  if(circuit.mode==='digital'&&(circuit.components.filter(p=>p.type==='INPUT').length>8||circuit.components.some(p=>p.type==='CLOCK'||digitalShape(p).sequential)))$('analysis').value='tick';
-  $('spice').disabled=circuit.mode!=='analog';$('duration-label').hidden=false;$('clock-window-label').hidden=circuit.mode!=='digital';
+  $('analysis').replaceChildren(...mode.options.map(([value,label])=>new Option(label,value)));
+  const defaultAnalysis=mode.defaultAnalysis(circuit);
+  $('analysis').value=mode.options.some(([value])=>value===priorAnalysis)?priorAnalysis:defaultAnalysis;
+  if(circuit.mode==='digital'&&defaultAnalysis==='tick'&&$('analysis').value==='truth')$('analysis').value='tick';
+  updateAnalysisControls();
   const previous=$('probe').value;
   $('probe').innerHTML=[...new Set(circuit.components.flatMap(p=>p.nodes))].filter(n=>n!=='0').map(n=>`<option value="${escape(n)}">${escape(n)}</option>`).join('');
   if([...$('probe').options].some(o=>o.value===previous))$('probe').value=previous;else if([...$('probe').options].some(o=>o.value==='out'))$('probe').value='out';
   $('undo').disabled=!history.length;$('redo').disabled=!future.length;
   renderLibrary();renderCanvas();renderInspector();updateHDL();
 }
+function updateAnalysisControls(){
+  const analog=circuit.mode==='analog',kind=$('analysis').value;
+  $('spice').hidden=$('engine').hidden=$('probe-label').hidden=!analog;
+  $('toggle-hdl').hidden=analog;
+  $('duration-label').hidden=analog?kind!=='transient':kind!=='tick';
+  $('clock-window-label').hidden=analog||kind!=='tick';
+  if(analog)$('hdl-panel').hidden=true;
+}
 function showModule(){
   $('circuit-workspace').hidden=!['analog','digital'].includes(module);$('fsm-workspace').hidden=module!=='fsm';$('cpu-workspace').hidden=module!=='cpu';
   document.querySelectorAll('.module').forEach(b=>b.classList.toggle('active',b.dataset.module===module));
-  $('save').textContent=module==='cpu'?'↧ Save assembly':'↧ Save JSON';
+  if(specialModes[module]){
+    $('hdl-panel').hidden=true;
+    $('footer-count').textContent=activeDocument()?.name??'';
+  }
+  $('open-resources').hidden=module!=='analog';
+  $('save').textContent='↧ Save JSON';
   renderTabs();
 }
 function switchModule(next){
@@ -311,27 +326,18 @@ window.addEventListener('blur',()=>{spaceHeld=false;$('schematic').classList.rem
 $('undo').onclick=()=>{if(!history.length)return;future.push(JSON.stringify(circuit));circuit=JSON.parse(history.pop());selected=null;module=circuit.mode;changed();showModule();};
 $('redo').onclick=()=>{if(!future.length)return;history.push(JSON.stringify(circuit));circuit=JSON.parse(future.pop());selected=null;module=circuit.mode;invalidate();persist();render();showModule();};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){setTool('select');$('context-menu').hidden=true;}if(!['analog','digital'].includes(module)||['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();$('undo').click();}if((e.ctrlKey||e.metaKey)&&e.key==='y'){e.preventDefault();$('redo').click();}});
-$('save').onclick=guarded(()=>{if(module==='cpu'){download('program.asm',$('cpu-source').value);return;}if(module==='fsm'){$('fsm-save').click();return;}download(filename()+'.json',JSON.stringify(circuit,null,2),'application/json');});
+$('save').onclick=guarded(()=>{
+  if(module==='cpu'){
+    download('microcontroller-project.json',JSON.stringify({kind:'microcontroller',...specialModes.cpu.content()},null,2),'application/json');
+    return;
+  }
+  if(module==='fsm'){specialModes.fsm.save();return;}
+  download(filename()+'.json',JSON.stringify(circuit,null,2),'application/json');
+});
 $('spice').onclick=guarded(()=>download(filename()+'.cir',spice(circuit)));
 $('import').onclick=()=>$('file-input').click();
-$('file-input').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>10000000)throw new Error('Project file must be smaller than 10 MB.');const parsed=JSON.parse(await file.text());if(parsed.documents){validateSession(parsed);if(session.documents.length+parsed.documents.length>24)throw new Error('Close some tabs before importing this bundle (24 open maximum).');captureDocument();let active;for(const d of parsed.documents){const next=makeDocument(d.kind,d.content,d.name);session.documents.push(next);if(d.id===parsed.activeId)active=next.id;}openWorkspace(active,false);}else if(parsed.states&&parsed.transitions){validateFSM(parsed);createWorkspace('fsm',{source:JSON.stringify(parsed,null,2)});}else{validateCircuit(parsed);createWorkspace(parsed.mode,parsed);}toast('Opened in a new workspace.');}catch(error){toast(error.message);}finally{e.target.value='';}};
+$('file-input').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>10000000)throw new Error('Project file must be smaller than 10 MB.');const contents=await file.text();if(/\.asm$/i.test(file.name)){const target=module==='cpu'?specialModes.cpu.content().target:'teaching';createWorkspace('cpu',microcontrollerProject({target,source:contents}));return;}const parsed=JSON.parse(contents);if(parsed.kind==='microcontroller'){createWorkspace('cpu',microcontrollerProject(parsed));}else if(parsed.documents){validateSession(parsed);if(session.documents.length+parsed.documents.length>24)throw new Error('Close some tabs before importing this bundle (24 open maximum).');captureDocument();let active;for(const d of parsed.documents){const next=makeDocument(d.kind,d.content,d.name);session.documents.push(next);if(d.id===parsed.activeId)active=next.id;}openWorkspace(active,false);}else if(parsed.states&&parsed.transitions){validateFSM(parsed);createWorkspace('fsm',{source:JSON.stringify(parsed,null,2)});}else{validateCircuit(parsed);createWorkspace(parsed.mode,parsed);}toast('Opened in a new workspace.');}catch(error){toast(error.message);}finally{e.target.value='';}};
 
-function table(rows){if(!rows.length)return '<p class="muted">No outputs to display.</p>';const keys=Object.keys(rows[0]);return `<table><thead><tr>${keys.map(k=>`<th>${escape(k)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${keys.map(k=>`<td>${escape(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;}
-function plot(result){
-  const probe=$('probe').value;if(!probe)return;
-  const ac=result.kind==='ac';
-  const points=result.data.rows.map(row=>[ac?Math.log10(row.f):row.t,ac?20*Math.log10(Math.max(row[probe].magnitude,1e-20)):row[probe]]);
-  const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);const xmin=xs[0],xmax=xs.at(-1);let ymin=Math.min(...ys),ymax=Math.max(...ys);
-  if(ymax-ymin<1e-10){ymin-=1;ymax+=1;}else{const margin=(ymax-ymin)*.1;ymin-=margin;ymax+=margin;}
-  const path=points.map(([x,y],i)=>`${i?'L':'M'}${(54+(x-xmin)/(xmax-xmin)*650).toFixed(2)} ${(162-(y-ymin)/(ymax-ymin)*140).toFixed(2)}`).join(' ');
-  $('result-body').innerHTML=`<svg class="plot" viewBox="0 0 730 190" role="img" aria-label="${escape(probe)} ${ac?'AC magnitude in dBV':'voltage over time'}">${[0,.25,.5,.75,1].map(k=>`<path class="axis" d="M54 ${22+k*140}H704"/><text x="2" y="${26+k*140}">${formatValue(ymax-k*(ymax-ymin))}</text>`).join('')}<path class="trace" d="${path}"/><text x="54" y="185">${ac?formatValue(10**xmin,'Hz'):formatValue(xmin,'s')}</text><text x="640" y="185">${ac?formatValue(10**xmax,'Hz'):formatValue(xmax,'s')}</text></svg><div class="plot-caption"><span>● V(${escape(probe)}) · ${ac?'dBV · logarithmic frequency':'volts · time'}</span><span>${ac?'Every source value is an AC amplitude':'Backward Euler · zero initial energy'}</span></div>`;
-  if(!ac)$('result-body').querySelector('svg').insertAdjacentHTML('beforeend','<line id="plot-playhead" class="plot-playhead" x1="54" x2="54" y1="18" y2="165"/>');
-}
-function digitalPlot(){
-  const data=lastResult.data,clockNets=circuit.components.filter(p=>p.type==='CLOCK').map(p=>p.nodes[0]),outputNets=Object.values(data.outputNodes||{}),nodes=[...new Set([...clockNets,...outputNets,...data.nodes])].slice(0,12),height=nodes.length*36+40;
-  const labels=new Map(circuit.components.filter(p=>['CLOCK','OUTPUT'].includes(p.type)).map(p=>[p.nodes[0],p.type==='CLOCK'?`${p.id} ${formatValue(p.frequency||defaultClockFrequency,'Hz')}`:p.id]));
-  $('result-body').innerHTML=`<svg class="timing-plot" viewBox="0 0 740 ${height}" role="img" aria-label="Digital timing diagram">${nodes.map((n,i)=>{let path='';const y=v=>18+i*36+(v?0:18);data.rows.forEach((row,j)=>{const x=125+row.t/data.duration*595;path+=j?`H${x}V${y(row[n])}`:`M${x} ${y(row[n])}`;});return `<text class="timing-label" x="5" y="${i*36+31}">${escape((labels.get(n)||n).slice(0,20))}</text><path class="timing-axis" d="M125 ${i*36+40}H720"/><path class="timing-trace" d="${path}"/>`;}).join('')}<line id="plot-playhead" class="plot-playhead" x1="125" x2="125" y1="8" y2="${height-22}"/><text class="timing-label" x="125" y="${height-5}">0 s</text><text class="timing-label" x="630" y="${height-5}">${formatValue(data.duration,'s')}</text></svg><p class="muted">${data.rows.length} events · Independent clock edges · ${nodes.length} signals shown</p>`;
-}
 function currentSample(){if(!lastResult)return null;if(lastResult.kind==='dc')return lastResult.data.nodes;if(['tick','transient'].includes(lastResult.kind)&&lastResult.data?.rows)return lastResult.data.rows[playbackIndex]||lastResult.data.rows[0];return lastResult.data?.nets||null;}
 function paintSimulationSample(){
   const row=currentSample();
@@ -351,35 +357,31 @@ function startPlayback(){
   function frame(now){const rows=lastResult.data.rows,total=rows.at(-1).t,start=rows[0].t;const elapsed=playbackLast===null?0:(now-playbackLast)/1000;playbackLast=now;playbackPosition+=elapsed/4*Number($('playback-speed').value);if(playbackPosition>1)playbackPosition%=1;const time=start+(total-start)*playbackPosition;let low=0,high=rows.length-1;while(low<high){const mid=Math.ceil((low+high)/2);if(rows[mid].t<=time)low=mid;else high=mid-1;}playbackIndex=low;paintSimulationSample();playbackFrame=requestAnimationFrame(frame);}
   playbackFrame=requestAnimationFrame(frame);
 }
-function runDigitalTick(advance=true){stopPlayback();if(advance){tick++;digitalTime=nextClockTime(circuit.components,digitalTime);}const data=evaluateDigital(circuit,{},digitalMemory,tick,digitalTime);digitalMemory=data.memory;lastResult={kind:'tick',rows:[{time:formatValue(digitalTime,'s'),...data.outputs,...data.nets}],data};$('result-title').textContent=`Logic evaluation · ${formatValue(digitalTime,'s')}`;$('result-body').innerHTML=table(lastResult.rows);$('playback-controls').hidden=true;paintSimulationSample();}
+function runDigitalTick(advance=true){stopPlayback();if(advance){tick++;digitalTime=nextClockTime(circuit.components,digitalTime);}const data=evaluateDigital(circuit,{},digitalMemory,tick,digitalTime);digitalMemory=data.memory;lastResult={kind:'tick',rows:[{time:formatValue(digitalTime,'s'),...data.outputs,...data.nets}],data};$('result-title').textContent=`Logic evaluation · ${formatValue(digitalTime,'s')}`;$('result-body').innerHTML=digitalTable(lastResult.rows,escape);$('playback-controls').hidden=true;paintSimulationSample();}
 $('run').onclick=guarded(async()=>{
-  const kind=$('analysis').value;
+  const kind=$('analysis').value,mode=schematicModes[circuit.mode];
+  const settings=mode.settings($,kind,circuit);
+  const origin=session.activeId,snapshot=JSON.stringify(circuit);
   stopPlayback();document.body.classList.add('results-open');$('toggle-results').setAttribute('aria-pressed','true');playbackIndex=0;playbackPosition=0;
   $('playback-controls').hidden=true;
   lastResult=null;$('result-title').textContent='Check circuit and analysis settings';$('result-body').innerHTML='<p class="muted">No results yet. If simulation fails, correct the reported error and run again.</p>';
   paintSimulationSample();
-  if(circuit.mode==='digital') {
-    if(kind==='tick'){const clocks=circuit.components.filter(p=>p.type==='CLOCK');let duration=parseValue($('duration').value);if(clocks.length&&$('auto-clock-window').checked){duration=2/Math.min(...clocks.map(p=>p.frequency||defaultClockFrequency));$('duration').value=formatValue(duration);}const data=digitalTimeline(circuit,{duration});lastResult={kind:'tick',data};$('result-title').textContent='Digital timing simulation';digitalPlot();setupPlayback();return;}
-    const rows=truthTable(circuit);lastResult={kind,rows};$('result-title').textContent=`Truth table · ${rows.length} combinations`;$('result-body').innerHTML=table(rows);setupPlayback(false);return;
-  }
-  const origin=session.activeId,snapshot=JSON.stringify(circuit);let data;
-  if($('engine').value==='ngspice'){
-    $('run').disabled=true;
-    try{const response=await fetch('/api/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({circuit,options:{kind,duration:parseValue($('duration').value),steps:400}})}),result=await response.json();if(!response.ok)throw new Error(result.error);data=result.data;}finally{$('run').disabled=false;}
-    if(session.activeId!==origin||JSON.stringify(circuit)!==snapshot){toast('Circuit changed during simulation. Run again on the current document.');return;}
-  }else data=kind==='dc'?operatingPoint(circuit):kind==='ac'?acSweep(circuit):transient(circuit,{duration:parseValue($('duration').value)});
-  if(kind==='dc'){
-    lastResult={kind,rows:Object.entries(data.nodes).map(([node,voltage])=>({node,voltage})),data};
-    $('result-title').textContent='DC operating point';$('result-body').innerHTML=`<div class="value-pills">${Object.entries(data.nodes).filter(([n])=>n!=='0').map(([n,v])=>`<div class="value-pill">V(${escape(n)})<strong>${formatValue(v,'V')}</strong></div>`).join('')}</div>`;
-  }else{
-    lastResult={kind,data};
-    $('result-title').textContent=kind==='ac'?'AC frequency response':'Transient response';plot(lastResult);
-  }
-  setupPlayback();
+  $('run').disabled=true;
+  let data;
+  try{data=await mode.run(circuit,settings);}
+  finally{$('run').disabled=false;}
+  if(session.activeId!==origin||JSON.stringify(circuit)!==snapshot||$('analysis').value!==kind)return;
+  lastResult=mode.present(kind,data,circuit,frontend);
+  setupPlayback(kind==='tick'||kind==='transient');
 });
-$('probe').onchange=()=>{if(lastResult&&['transient','ac'].includes(lastResult.kind)){plot(lastResult);paintSimulationSample();}};
+$('analysis').onchange=updateAnalysisControls;
+$('result-body').addEventListener('click',e=>{
+  if(e.target.id==='download-vcd'&&lastResult?.kind==='verify')download(filename()+'.vcd',lastResult.data.vcd);
+});
+$('probe').onchange=()=>{if(lastResult&&['transient','ac'].includes(lastResult.kind)){analogPlot(lastResult,frontend);paintSimulationSample();}};
 $('csv').onclick=guarded(()=>{
   if(!lastResult)throw new Error('Run a simulation before exporting results.');
+  if(lastResult.kind==='verify')throw new Error('Use Download VCD for Icarus results.');
   let rows=lastResult.rows;
   if(lastResult.kind==='transient')rows=lastResult.data.rows;
   if(lastResult.kind==='tick'&&lastResult.data?.rows)rows=lastResult.data.rows;
@@ -395,51 +397,99 @@ $('playback-position').oninput=()=>{stopPlayback();const rows=lastResult?.data?.
 function message(text,role='bot',root=chatThread){const div=document.createElement('div');div.className='chat-message '+role;div.textContent=text;root.append(div);$('chat').scrollTop=$('chat').scrollHeight;}
 function proposalCard(proposal,root=chatThread,originId=session.activeId){
   message(proposal.explanation,'bot',root);const card=document.createElement('div');card.className='proposal';const title=document.createElement('strong');title.textContent=`${proposal.circuit.name} · ${proposal.circuit.components.length} components`;card.append(title);
+  if(proposal.model){
+    const source=document.createElement('p');
+    source.className='muted';
+    source.textContent=`${providerNames[proposal.provider]} · ${proposal.model}`;
+    card.append(source);
+  }
   const report=document.createElement('p');report.className='proposal-validation';report.textContent=proposal.verification?.summary||'Schema validated · simulation available after applying';card.append(report);
   const button=document.createElement('button');button.className='primary';button.textContent='Apply to canvas →';button.onclick=guarded(()=>{if(session.documents.some(d=>d.id===originId))openWorkspace(originId);else {createWorkspace(proposal.circuit.mode,proposal.circuit);return;}applyCircuit(proposal.circuit);button.disabled=true;button.textContent='Applied · use Undo to restore';toast('Circuit applied. Run a simulation to inspect it.');});card.append(button);
   const newTab=document.createElement('button');newTab.textContent='Open in new workspace ↗';newTab.onclick=guarded(()=>createWorkspace(proposal.circuit.mode,proposal.circuit));card.append(newTab);root.append(card);$('chat').scrollTop=$('chat').scrollHeight;
 }
+const providerNames={ollama:'Ollama',gemini:'Gemini',grok:'Grok',groq:'Groq'};
+const cloudMode=mode=>Object.hasOwn(providerNames,mode)&&mode!=='ollama';
 $('assistant-form').onsubmit=async e=>{
-  e.preventDefault();const prompt=$('prompt').value.trim();if(!prompt)return;const mode=$('ai-mode').value;const current=structuredClone(circuit),originId=session.activeId,root=chatThread;
+  e.preventDefault();
+  if($('send').disabled)return;
+  const prompt=$('prompt').value.trim();
+  if(!prompt)return;
+  const mode=$('ai-mode').value,originId=session.activeId,root=chatThread;
+  const includeCircuit=!cloudMode(mode)||$('ai-include-circuit').checked;
+  const context=includeCircuit?{circuit:structuredClone(circuit),resourceSources}:{};
   message(prompt,'user',root);$('prompt').value='';$('send').disabled=true;
+  $('assistant-form').setAttribute('aria-busy','true');
+  $('send').textContent='…';
   try{
     let proposal;
     if(mode==='recipe'){proposal=recipe(prompt);proposal.verification=verifyProposal(proposal.circuit);}
     else {
-      if(!aiAvailable)throw new Error('Local AI is not configured. Set OLLAMA_MODEL in the server environment and restart. See README.md.');
-      const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,circuit:current,resourceSources})});
-      proposal=await response.json();if(!response.ok)throw new Error(proposal.error||'Assistant request failed.');
+      const provider=mode==='local'?'ollama':mode;
+      const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,provider,...context})});
+      proposal=await response.json();
+      if(!response.ok){
+        if(session.activeId===originId&&!$('prompt').value)$('prompt').value=prompt;
+        message(proposal.error||'Assistant request failed.','bot',root);
+        if(proposal.code==='INVALID_PROPOSAL'){
+          try{
+            const fallback=recipe(prompt);
+            fallback.verification=verifyProposal(fallback.circuit);
+            const button=document.createElement('button');
+            button.textContent='Preview matching offline recipe';
+            button.onclick=()=>{proposalCard(fallback,root,originId);button.remove();};
+            root.append(button);
+            $('chat').scrollTop=$('chat').scrollHeight;
+          }catch{/* This prompt does not match a runnable offline recipe. */}
+        }
+        return;
+      }
     }
     validateCircuit(proposal.circuit);proposalCard(proposal,root,originId);
-  }catch(error){message(error.message,'bot',root);}finally{$('send').disabled=false;}
+  }catch(error){
+    if(session.activeId===originId&&!$('prompt').value)$('prompt').value=prompt;
+    message(error.message,'bot',root);
+  }finally{
+    $('send').disabled=false;
+    $('send').textContent='↑';
+    $('assistant-form').removeAttribute('aria-busy');
+  }
 };
 document.querySelectorAll('[data-prompt]').forEach(button=>button.onclick=()=>{$('prompt').value=button.dataset.prompt;$('assistant-form').requestSubmit();});
-$('ai-mode').onchange=()=>{$('composer-label').textContent=$('ai-mode').value==='recipe'?'OFFLINE RECIPE BUILDER':'LOCAL LANGUAGE MODEL';$('ai-status').textContent=$('ai-mode').value==='recipe'?'Offline recipes are ready. No API key needed.':aiAvailable?'Local model configured. Prompts are sent to your Ollama server.':'Set OLLAMA_MODEL and restart the server to enable AI.';};
-fetch('/api/status').then(r=>r.json()).then(s=>{aiAvailable=s.ai;ngspiceReady=s.ngspice;$('ai-status').textContent=aiAvailable?'Local model connected.':'Set OLLAMA_MODEL to connect a local AI model.';renderResources();}).catch(()=>{});
+function renderAssistantStatus(){
+  const mode=$('ai-mode').value;
+  const recipes=mode==='recipe',cloud=cloudMode(mode);
+  $('cloud-options').hidden=!cloud;
+  $('prompt').maxLength=cloud?12000:4000;
+  $('composer-label').textContent=recipes?'OFFLINE RECIPE BUILDER':cloud?`${providerNames[mode].toUpperCase()} · CLOUD API`:'OLLAMA · LOCAL MODEL';
+  if(cloud){
+    const status=aiStatus?.providers?.[mode];
+    $('ai-status').textContent=status?.configured?`Configured · ${status.model}`:
+      status?`Set ${status.keyVar} in .env and restart to use ${providerNames[mode]}.`:
+        aiStatus?.unavailable?'Could not check provider configuration. Check the local server.':'Checking provider configuration…';
+  }else{
+    $('ai-status').textContent=recipes?'Offline recipes are ready.':
+      aiStatus?.ai?`Connected · ${aiStatus.model}`:aiStatus?.aiError||'Checking Ollama…';
+  }
+}
+async function refreshAssistantStatus(){
+  try{
+    const response=await fetch('/api/status');
+    if(!response.ok)throw new Error();
+    aiStatus=await response.json();
+    ngspiceReady=aiStatus.ngspice;
+    renderResources();
+  }catch{aiStatus={unavailable:true,aiError:'Could not check Ollama. Check the local server and try again.'};}
+  renderAssistantStatus();
+}
+$('ai-mode').onchange=()=>{
+  $('ai-include-circuit').checked=false;
+  renderAssistantStatus();
+  if($('ai-mode').value!=='recipe')refreshAssistantStatus();
+};
+renderAssistantStatus();
+refreshAssistantStatus();
 $('help').onclick=()=>$('guide').showModal();$('close-guide').onclick=()=>$('guide').close();
 
-function renderFSM(){
-  $('fsm-state').textContent=fsmState;$('fsm-graph').innerHTML=fsm.states.map(s=>`<span class="state-card ${s===fsmState?'current':''}">${escape(s)}</span>`).join('');
-}
-function loadFSM(){const next=validateFSM(JSON.parse($('fsm-source').value));fsm=structuredClone(next);fsmState=fsm.initial;fsmLoadedSource=$('fsm-source').value;$('fsm-log').textContent=`Reset → ${fsmState}\n`;renderFSM();}
-$('fsm-source').value=JSON.stringify(fsm,null,2);loadFSM();
-$('fsm-load').onclick=guarded(loadFSM);
-$('fsm-step').onclick=guarded(()=>{
-  if($('fsm-source').value!==fsmLoadedSource)throw new Error('Load the edited definition before stepping.');
-  const input=$('fsm-input').value;const next=stepFSM(fsm,fsmState,input);$('fsm-log').textContent+=`${fsmState} -- ${input} / ${next.output} → ${next.state}\n`;fsmState=next.state;renderFSM();
-});
-$('fsm-save').onclick=guarded(()=>{const machine=validateFSM(JSON.parse($('fsm-source').value));download('state-machine.json',JSON.stringify(machine,null,2),'application/json');});
-function renderCPU(){
-  $('cpu-registers').innerHTML=`<div class="registers">${[['PC',cpu.pc],['ACC',cpu.a],['ZERO',Number(cpu.z)],['CYCLES',cpu.cycles]].map(([label,value])=>`<div><small>${label}</small><strong>${value}</strong></div>`).join('')}</div><p class="muted">${cpu.halted?'HALTED':`Next: ${program[cpu.pc]?.op||'end'} ${program[cpu.pc]?.arg??''}`}</p>`;
-  $('cpu-output').textContent=cpu.output.length?cpu.output.join(' → '):'Waiting for OUT instruction…';
-  $('cpu-memory').innerHTML=`<div class="memory-grid">${cpu.memory.slice(0,32).map((v,i)=>`<div><small>${i.toString(16).padStart(2,'0').toUpperCase()}</small>${v.toString(16).padStart(2,'0').toUpperCase()}</div>`).join('')}</div>`;
-}
-function cpuCheck(){if($('cpu-source').value!==cpuLoadedSource)throw new Error('Assemble the edited program before running.');}
-$('cpu-source').value=demoProgram;cpuLoadedSource=demoProgram;renderCPU();
-$('cpu-load').onclick=guarded(()=>{program=assemble($('cpu-source').value);cpu=newCPU();cpuLoadedSource=$('cpu-source').value;renderCPU();});
-$('cpu-step').onclick=guarded(()=>{cpuCheck();cpu=stepCPU(program,cpu);renderCPU();});
-$('cpu-run').onclick=guarded(()=>{cpuCheck();for(let i=0;i<1000&&!cpu.halted;i++)cpu=stepCPU(program,cpu);renderCPU();if(!cpu.halted)toast('Paused at the 1,000-step limit. Step or run again to continue.');});
-$('cpu-save').onclick=()=>download('program.asm',$('cpu-source').value);
 function openProperties(){if(!selected)return;renderInspector();$('property-body').replaceChildren(...$('inspector').childNodes);$('properties-dialog').showModal();}
 function selectionIds(){return multiSelection.size?[...multiSelection]:selected?[selected]:[];}
 function componentAction(action){
@@ -507,7 +557,11 @@ function updateHDL(){
 }
 $('toggle-hdl').onclick=()=>{$('hdl-panel').hidden=!$('hdl-panel').hidden;updateHDL();};$('close-hdl').onclick=()=>$('hdl-panel').hidden=true;
 $('download-verilog').onclick=guarded(()=>{const result=generateVerilog(circuit);download(filename()+'.v',result.design);download(filename()+'_tb.v',result.testbench);});
-for(const [id,css] of [['toggle-library','library-open'],['toggle-copilot','copilot-open'],['toggle-results','results-open']])$(id).onclick=()=>{document.body.classList.toggle(css);$(id).setAttribute('aria-pressed',String(document.body.classList.contains(css)));};
+for(const [id,css] of [['toggle-library','library-open'],['toggle-copilot','copilot-open'],['toggle-results','results-open']])$(id).onclick=()=>{
+  const open=document.body.classList.toggle(css);
+  $(id).setAttribute('aria-pressed',String(open));
+  if(id==='toggle-copilot'&&open&&$('ai-mode').value!=='recipe')refreshAssistantStatus();
+};
 $('workspace-tabs').onclick=guarded(e=>{const open=e.target.closest('[data-open]'),close=e.target.closest('[data-close]');if(open)openWorkspace(open.dataset.open);if(close){captureDocument();const id=close.dataset.close,doc=session.documents.find(d=>d.id===id);closedDocuments.push(doc);session.documents=session.documents.filter(d=>d.id!==id);if(!session.documents.length)createWorkspace('analog');else openWorkspace(id===session.activeId?session.documents.at(-1).id:session.activeId,false);}});
 $('new-workspace').onclick=guarded(()=>createWorkspace());
 $('duplicate-workspace').onclick=guarded(()=>{if(session.documents.length>=24)throw new Error('Maximum 24 open workspaces.');captureDocument();const doc=duplicateDocument(activeDocument());session.documents.push(doc);openWorkspace(doc.id,false);});
@@ -515,7 +569,6 @@ $('reopen-workspace').onclick=guarded(()=>{if(!closedDocuments.length)throw new 
 $('export-session').onclick=guarded(()=>{saveSession();download('circuit-studio-workspaces.json',JSON.stringify(session,null,2),'application/json');});
 $('fit-canvas').onclick=()=>{camera=null;renderCanvas();};$('zoom-in').onclick=()=>zoom(.75);$('zoom-out').onclick=()=>zoom(1.33);
 $('arrange-canvas').onclick=guarded(()=>{remember();arrange(circuit);camera=null;changed();});
-for(const id of ['fsm-source','cpu-source'])$(id).addEventListener('input',()=>{try{saveSession();}catch(e){toast(e.message);}});
 window.addEventListener('beforeunload',()=>{try{saveSession();}catch{/* The export button remains available if storage is full. */}});
 try{const stored=localStorage.getItem('circuit-studio-workspaces-v1');if(stored)session=validateSession(JSON.parse(stored));}catch{toast('Saved workspace data could not be opened; recovered the last circuit instead.');}
 if(!session){const initial=makeDocument(circuit.mode,circuit);session={version:1,documents:[initial],activeId:initial.id};}

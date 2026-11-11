@@ -4,7 +4,20 @@
   "private": true,
   "type": "module",
   "description": "An open-source analog and digital electronics workbench with an optional local AI assistant",
-  "scripts": { "start": "node server.mjs", "dev": "node --watch server.mjs", "test": "node --test", "check": "node scripts/check.mjs" },
-  "engines": { "node": ">=22" },
-  "license": "MIT"
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs --dev",
+    "build": "node scripts/build-frontend.mjs",
+    "test": "node --test",
+    "check": "node scripts/check.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
 }

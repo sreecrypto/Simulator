@@ -1,0 +1,79 @@
+#circuit-workspace[data-mode="analog"] {
+  --mode-accent: #91d9c0;
+}
+
+#circuit-workspace[data-mode="digital"] {
+  --mode-accent: #bba6ff;
+}
+
+#mode-label,
+#mode-results {
+  color: var(--mode-accent);
+}
+
+#fsm-workspace,
+#cpu-workspace {
+  align-items: start;
+}
+
+.special-output h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin: 0 0 0.8rem;
+}
+
+.target-row {
+  align-items: center;
+}
+
+.target-row label,
+#cpu-status {
+  color: #aab7cf;
+}
+
+.transition-scroll {
+  overflow: auto;
+  max-height: 20rem;
+}
+
+.transition-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.transition-scroll :is(th, td) {
+  padding: 0.6rem;
+  border-bottom: 1px solid #303d56;
+  overflow-wrap: anywhere;
+}
+
+.active-transition {
+  background: #a993ff20;
+  color: #dfd4ff;
+}
+
+#cpu-ports {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.port-value {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  background: #0d1525;
+  border: 1px solid #30394e;
+  border-radius: 6px;
+}
+
+.port-value code {
+  color: #91d9c0;
+}
+
+#cpu-output,
+#fsm-log {
+  max-height: 15rem;
+  overflow: auto;
+}

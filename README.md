@@ -1,6 +1,6 @@
 # Circuit Studio · v0.3.1
 
-A local electronics workbench with editable SPICE component families, a lab-style function generator, external model resources, digital logic simulation, live Verilog/testbench generation, FSM and CPU labs, and multiple project tabs.
+A local electronics workbench with analog, digital, FSM, and microcontroller workspaces, separate simulation APIs, and an optional MCP companion.
 
 ![Blank workbench](docs/preview.jpg)
 
@@ -9,21 +9,18 @@ A local electronics workbench with editable SPICE component families, a lab-styl
 Install Node.js 22 or newer, then run from this folder:
 
 ```sh
-node server.mjs
+npm ci
+npm start
 ```
 
-Open **http://127.0.0.1:3000**. Stop with Ctrl+C. There are no npm dependencies. Optional npm shortcuts remain available.
+Open **http://127.0.0.1:3000**. Stop with Ctrl+C. The Node server builds the React JSX and CSS with esbuild and serves both from localhost. Use `npm run dev` and refresh the browser after editing the frontend. Use `npm run build` to check the build or produce the static assets in `dist/`. The simulator APIs are served by `server.mjs`.
 
 ```sh
 node --test
 node scripts/check.mjs
 ```
 
-For optional engine and AI settings, copy `.env.example` to `.env`, edit it, then use:
-
-```sh
-node --env-file=.env server.mjs
-```
+For optional engine and AI settings, copy `.env.example` to `.env` and edit it. The server loads the project’s `.env` at startup. Environment variables already set in the shell take precedence.
 
 ## Plain canvas and editable components
 
@@ -102,13 +99,28 @@ Model search uses [Firecrawl's official search API](https://docs.firecrawl.dev/f
 
 ## Copilot and missing components
 
-Configure a local [Ollama](https://ollama.com/) model using `OLLAMA_MODEL` and optional `OLLAMA_URL`, then open Copilot and select Local AI. No model is bundled.
+Start [Ollama](https://ollama.com/), then open **Copilot → Local AI · Ollama**. The workbench checks Ollama's installed models and displays the connected model name. The default address is `http://127.0.0.1:11434`. Set `OLLAMA_MODEL` in `.env` to choose a specific installed model, such as `TinyLlama:latest`. Leave the value empty to discover a local model automatically. The project does not download models.
 
-The model gets the current circuit and relevant component definitions. For missing parts it can request a model search, select candidate URLs, download up to three models, receive parsed pin definitions, and construct a circuit using them. The server binds model names to imported library definitions, validates the circuit, runs available smoke checks, and permits one diagnostic repair. The flow is bounded to four model calls, one search and three downloads per request; each model call has a 90-second timeout.
+For cloud circuit generation, add your own API keys to the local, Git-ignored `.env` and restart the server:
+
+```dotenv
+GEMINI_API_KEY=your_google_ai_studio_key
+GEMINI_MODEL=gemini-4-carbon
+XAI_API_KEY=your_xai_api_key
+GROK_MODEL=grok-4.7
+GROQ_API_KEY=your_groqcloud_api_key
+GROQ_MODEL=openai/gpt-oss-120b
+```
+
+Choose **Gemini · Google API**, **Grok · xAI API**, or **Groq · GroqCloud API** in Copilot. Configure any provider on its own. For Groq, use a model with [JSON Object Mode](https://console.groq.com/docs/structured-outputs). The server keeps the keys out of the frontend. Each cloud request shares the prompt and catalog context with the selected provider and may use API credits. Check **Include current circuit and registered model sources** when you want the provider to extend an existing circuit.
+
+Cloud providers can accept specifications up to 12,000 characters. For a larger design, describe the stages, pin or bus widths, clock and reset behavior, source values, and expected outputs. Copilot requests a structured circuit and lays it out automatically. It can retry once with a validation diagnostic. The workbench supports up to 256 components per project. Split larger or mixed-signal designs into separately testable stages. A passed check means the circuit could run under the simulator's checks. Compare waveforms or outputs with your requirements before relying on the design.
+
+The model gets relevant component definitions and any attached project context. For missing parts it can request a model search, select candidate URLs, download up to three models, receive parsed pin definitions, and construct a circuit using them. The server binds model names to imported library definitions, validates the circuit, runs available smoke checks, and permits one diagnostic repair. The flow is bounded to four model calls, one search and three downloads per request. Model calls time out after 90 seconds for Ollama or 180 seconds for a cloud provider.
 
 Downloads are installed as circuit data; they do not execute model-generated code or shell commands. Search results remain untrusted source material. A compatible model must actually be retrieved and parsed. If ngspice is missing, nonlinear proposals are explicitly labeled **simulation pending**, rather than verified.
 
-The full search → download → install → build → simulate flow was verified using mocked HTTP/model responses and a real built-in linear solve. No real Ollama model or live external search provider was exercised during verification. Model quality, source availability, format compatibility and the installed engine determine which requests succeed. Smoke checks do not prove circuit specifications or physical hardware correctness.
+The external-model search and import flow is covered by tests with mocked upstream responses and a real built-in linear solve. TinyLlama uses a compact structured response for simple projects on a blank canvas. If a model's proposal fails validation and the prompt matches a built-in design, Copilot can offer that recipe as a separate preview. Model quality, source availability, format compatibility and the installed engine determine which requests succeed. Smoke checks do not prove circuit specifications or physical hardware correctness.
 
 The optional deterministic Parametric builder mode still supports larger predefined families (ALUs, ripple adders, counters, decoders, active filters and bridges), without startup suggestions or example cards.
 
@@ -133,13 +145,55 @@ This produces `circuit.vcd`. The development machine's Icarus 0.9.7 backend cras
 
 ## Other workspaces and files
 
-FSM supports deterministic Mealy transitions, JSON definitions and stepping. The CPU remains an original 8-bit teaching ISA with 256 memory bytes, not a Deeds DMC8-compatible emulator. Digital simulation is binary/zero-delay without HDL import, X/Z, propagation timing or mixed-signal scheduling.
+| Workspace | Interface | Local API |
+| --- | --- | --- |
+| Analog | SPICE export, engine selection, DC/AC/transient plots and voltage probes | `POST /api/analog/run` |
+| Digital | Truth tables, timed clocks, Verilog export and optional Icarus verification | `POST /api/digital/run` |
+| FSM | JSON editor, transition table, active state and event log | `POST /api/fsm/run` |
+| Microcontrollers | Target selector, assembly editor, instruction stepping, registers and port latches | `POST /api/microcontrollers/run` |
+
+The digital workspace's **Icarus verification** analysis runs generated Verilog assertions for combinational circuits with up to eight inputs. On success it offers a VCD download. It requires working Icarus and vvp executables that support SystemVerilog 2012. Set `IVERILOG_BIN` and `VVP_BIN` if they are outside PATH. Built-in digital timing is zero-delay and uses each clock's configured frequency.
+
+**Microcontrollers** includes the original teaching CPU, an ATmega328P AVR assembly subset, and an MCS-51 assembly subset. Choose a target, type assembly or select **Load example**, and use **Assemble / reset** before stepping or running. The AVR and 8051 views show port register values in hex and binary. These profiles model selected instructions and register latches. They have no peripheral timing, interrupt emulation, compiled firmware loading, or schematic pin co-simulation. **Save JSON** preserves the target and drafts. **Save assembly** exports the active source, and **Open project** accepts JSON and `.asm` files. Raw assembly imports use the current microcontroller target, or the teaching CPU from another mode.
+
+## Local MCP companion
+
+Start the Node server with `node server.mjs`. Install the optional Python MCP dependencies (Python 3.10+):
+
+```powershell
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install -r requirements-mcp.txt
+```
+
+On macOS and Linux use `.venv/bin/python`. Add a stdio server entry in your MCP client with the absolute path to that interpreter as the command and the absolute path to `mcp_server.py` as its first argument:
+
+```json
+{
+  "mcpServers": {
+    "circuit-studio": {
+      "command": "C:/path/to/Simulator/.venv/Scripts/python.exe",
+      "args": ["C:/path/to/Simulator/mcp_server.py"]
+    }
+  }
+}
+```
+
+The companion exposes `simulator_status`, `simulate_analog`, `simulate_digital`, `simulate_fsm` and `simulate_microcontroller`. It calls the same simulation API as the browser on `127.0.0.1`. If you change the Node `PORT`, set `CIRCUIT_STUDIO_PORT` to the same value in your MCP client configuration. MCP traces may be sampled for display. Use the workbench CSV or VCD export for complete results. See the [Python MCP SDK v1 documentation](https://py.sdk.modelcontextprotocol.io/v1/).
+
+This project uses a local browser UI, a Node HTTP backend, and Python stdio for MCP. The analog native adapter uses ngspice. Tauri packaging, remote workers, LTspice execution, and full firmware emulation with Renode or simavr are future integrations.
 
 Important files:
 
 ```text
-index.html / styles.css / src/workbench.css   Canvas-first interface and dialogs
-src/app.js                                  Editor, context menu, panels, workspaces
+index.html                                   React mount document
+src/ui/                                      React workspace views, dialogs and UI styles
+scripts/build-frontend.mjs                   Node/esbuild JSX and CSS build
+backend/ollama.mjs                           Local model discovery and chat adapter
+backend/cloud-copilot.mjs                    Gemini and Grok API adapters and structured output
+src/app.js                                  Shared schematic editor and workspace tabs
+src/workspaces/                             Mode-specific browser controllers and result views
+backend/                                    Separate simulation handlers and Icarus adapter
+mcp_server.py                               Local stdio tools for all four simulation modes
 src/catalog.js                              Editable families and legacy ID compatibility
 src/model.js / src/analog.js / src/digital.js Validation, export and built-in engines
 src/waveforms.js                            Generator validation, sampling and SPICE sources

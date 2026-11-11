@@ -1,0 +1,50 @@
+.modules .module:focus-visible,
+.toolbar :is(button, select):focus-visible,
+.top-actions button:focus-visible,
+.workspace-actions button:focus-visible {
+  outline: 2px solid #bba6ff;
+  outline-offset: 2px;
+}
+
+.modules .module.active[data-module="analog"] {
+  border-color: #5b9d89;
+}
+
+.toolbar {
+  row-gap: 8px;
+}
+
+.startup-error {
+  margin: 12px;
+  padding: 12px 16px;
+  border: 1px solid #9a5865;
+  border-radius: 6px;
+  background: #372338;
+}
+
+.cloud-options {
+  color: #aab7cf;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.cloud-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cloud-options input {
+  flex: none;
+  margin: 2px 0 0;
+}
+
+@media (max-width: 620px) {
+  .modules .module {
+    min-height: 44px;
+  }
+
+  .toolbar :is(button, select) {
+    min-height: 32px;
+  }
+}

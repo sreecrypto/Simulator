@@ -8,6 +8,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm ci
+      - run: npm run build
       - name: Install simulator verification tools
         run: sudo apt-get update && sudo apt-get install -y iverilog ngspice
       - run: node scripts/check.mjs
