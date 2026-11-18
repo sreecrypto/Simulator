@@ -5,7 +5,7 @@ import { basename, join, resolve } from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
-export async function buildFrontend({ dev = false } = {}) {
+export async function buildFrontend({ dev = false, shared = false } = {}) {
   const result = await build({
     absWorkingDir: root,
     entryPoints: { workbench: 'src/ui/main.jsx' },
@@ -15,7 +15,10 @@ export async function buildFrontend({ dev = false } = {}) {
     format: 'esm',
     jsx: 'automatic',
     target: 'es2022',
-    define: { 'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production') },
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
+      __SHARED_BUILD__: JSON.stringify(shared),
+    },
     minify: !dev,
     write: false,
   });
@@ -23,7 +26,7 @@ export async function buildFrontend({ dev = false } = {}) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const files = await buildFrontend();
+  const files = await buildFrontend({ shared: process.argv.includes('--shared') });
   const assets = join(root, 'dist', 'assets');
   await mkdir(assets, { recursive: true });
   await copyFile(join(root, 'index.html'), join(root, 'dist', 'index.html'));

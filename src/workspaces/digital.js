@@ -8,7 +8,8 @@ export const digitalWorkspace = {
   library: 'LOGIC',
   results: 'LOGIC ANALYZER',
   runLabel: '▶ Run logic',
-  options: [['truth', 'Truth table'], ['tick', 'Timing diagram'], ['verify', 'Icarus verification']],
+  options: [['truth', 'Truth table'], ['tick', 'Timing diagram'],
+    ...(typeof __SHARED_BUILD__ !== 'undefined' && __SHARED_BUILD__ ? [] : [['verify', 'Icarus verification']])],
   defaultAnalysis(circuit) {
     return circuit.components.filter(p => p.type === 'INPUT').length > 8 ||
       circuit.components.some(p => p.type === 'CLOCK' || digitalShape(p).sequential) ? 'tick' : 'truth';

@@ -19,8 +19,11 @@ import {generateVerilog} from './verilog.js';
 import {wirePath,nearestPort} from './wiring.js';
 import {defaultClockFrequency,nextClockTime} from './clocks.js';
 import {selectionRectangle,intersectsSelection} from './selection.js';
+import {createBoardView} from './ui/board-view.js';
 
 const $=id=>document.getElementById(id);
+const sharedBuild=typeof __SHARED_BUILD__!=='undefined'&&__SHARED_BUILD__;
+const boardView=createBoardView($('board-view'));
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const labels={R:'Resistor',C:'Capacitor',L:'Inductor',V:'Voltage source',I:'Current source',E:'Voltage amplifier',G:'Transconductance',INPUT:'Logic input',OUTPUT:'Logic output',CLOCK:'Clock',NOT:'NOT gate',AND:'AND gate',OR:'OR gate',XOR:'XOR gate',NAND:'NAND gate',NOR:'NOR gate',XNOR:'XNOR gate',DFF:'D flip-flop'};
 const glyphs={R:'∿',C:'⊣⊢',L:'∩∩',V:'⊕',I:'↑',INPUT:'01',OUTPUT:'◉',CLOCK:'▁▔',NOT:'▷',AND:'&',OR:'≥1',XOR:'=1',NAND:'!&',NOR:'!≥',XNOR:'!=',DFF:'D'};
@@ -88,6 +91,7 @@ function restoreDocument(doc){
   stopPlayback();selectionLayer.replaceChildren();
   specialModes[module]?.suspend();
   const live=liveDocuments.get(doc.id);module=doc.kind;selected=null;firstPin=null;camera=null;drag=null;multiSelection.clear();
+  boardView.reset();
   history=live?.history||[];future=live?.future||[];lastResult=live?.lastResult||null;digitalMemory=live?.digitalMemory||{};tick=live?.tick||0;camera=live?.camera||null;
   digitalTime=live?.digitalTime||0;playbackIndex=live?.playbackIndex||0;playbackPosition=live?.playbackPosition||0;$('auto-clock-window').checked=live?.autoWindow??true;
   if(['analog','digital'].includes(module))circuit=structuredClone(validateCircuit(doc.content));else if(live)circuit=structuredClone(live.circuit);
@@ -151,7 +155,8 @@ function symbol(p) {
 function renderCanvas(){
   const bounds=canvasBounds();const view=camera||bounds;$('schematic').setAttribute('viewBox',`${view.x} ${view.y} ${view.width} ${view.height}`);
   const nets=new Map();
-  for(const p of circuit.components)pinPositions(p).forEach((xy,i)=>{const n=p.nodes[i];if(!nets.has(n))nets.set(n,[]);nets.get(n).push(xy);});
+  const portsByPart = new Map(circuit.components.map(part => [part.id, localPinPositions(part)]));
+  for(const p of circuit.components)portsByPart.get(p.id).map(point=>transformPoint(p,point)).forEach((xy,i)=>{const n=p.nodes[i];if(!nets.has(n))nets.set(n,[]);nets.get(n).push(xy);});
   $('net-layer').innerHTML=[...nets].map(([name,points])=> {
     if(name==='0')return points.map(([x,y])=>`<path class="net" d="M${x} ${y}v25m-12 0h24m-19 5h14m-10 5h6"/><text class="net-label" x="${x+14}" y="${y+29}">0</text>`).join('');
     if(points.length<2)return '';
@@ -165,6 +170,25 @@ function renderCanvas(){
     const transform=`translate(${p.x} ${p.y}) rotate(${p.rotation||0}) scale(${p.mirrorX?-1:1} ${p.mirrorY?-1:1}) translate(${-p.x} ${-p.y})`;
     return `<g class="component ${selected===p.id||multiSelection.has(p.id)?'selected-part':''}" data-id="${p.id}"><rect class="component-hit" x="${p.x-(isBlock?78:45)}" y="${p.y-extent-30}" width="${isBlock?156:90}" height="${extent*2+65}" fill="transparent" stroke="none" pointer-events="all"/><g transform="${transform}" fill="none" stroke="#4c8069" stroke-width="2">${symbol(p)}</g><text class="component-label" text-anchor="middle" x="${p.x}" y="${p.y-extent-14}">${escape(p.id)}</text><text class="component-value" text-anchor="middle" x="${p.x}" y="${p.y+extent+18}">${escape(subtitle)}</text>${positions.map(([x,y],i)=>`<circle class="pin" data-pin="${i}" data-part="${p.id}" cx="${x}" cy="${y}" r="5"/><text class="pin-label" x="${x}" y="${y-8}" text-anchor="middle">${escape(isBlock?(spec?.pinNames[i]||'P'+i):p.nodes[i])}</text>`).join('')}</g>`;
   }).join('');
+  boardView.setScene({
+    bounds,
+    mode: circuit.mode,
+    nets,
+    parts: circuit.components.map(part => {
+      const ports = portsByPart.get(part.id);
+      const block = part.type === 'BLOCK' || ports.length > 3;
+      return {
+        id: part.id, type: part.type, x: part.x, y: part.y,
+        pins: ports.map(point => transformPoint(part, point)), output: part.nodes.at(-1),
+        selected: selected === part.id || multiSelection.has(part.id),
+        transform: point => transformPoint(part, point),
+        halfWidth: block ? 76 : 36,
+        halfHeight: block ? Math.max(36,...ports.map(([,y])=>Math.abs(y-part.y)+6)) : 15,
+        height: block ? 22 : ['V','I','CLOCK'].includes(part.type) ? 36 : 19,
+      };
+    }),
+  });
+  $('board-count').textContent=`${circuit.components.length} components · ${nets.size} nets`;
   renderWirePreview();
   paintSimulationSample();
 }
@@ -220,7 +244,8 @@ function render(){
 }
 function updateAnalysisControls(){
   const analog=circuit.mode==='analog',kind=$('analysis').value;
-  $('spice').hidden=$('engine').hidden=$('probe-label').hidden=!analog;
+  $('spice').hidden=$('probe-label').hidden=!analog;
+  $('engine').hidden=!analog||sharedBuild;
   $('toggle-hdl').hidden=analog;
   $('duration-label').hidden=analog?kind!=='transient':kind!=='tick';
   $('clock-window-label').hidden=analog||kind!=='tick';
@@ -341,11 +366,35 @@ $('file-input').onchange=async e=>{try{const file=e.target.files[0];if(!file)ret
 function currentSample(){if(!lastResult)return null;if(lastResult.kind==='dc')return lastResult.data.nodes;if(['tick','transient'].includes(lastResult.kind)&&lastResult.data?.rows)return lastResult.data.rows[playbackIndex]||lastResult.data.rows[0];return lastResult.data?.nets||null;}
 function paintSimulationSample(){
   const row=currentSample();
+  boardView.setSample(row);
   document.querySelectorAll('#net-layer .net[data-net]').forEach(path=>{const value=row?.[path.dataset.net];path.classList.toggle('logic-high',circuit.mode==='digital'&&value===1);path.classList.toggle('logic-low',circuit.mode==='digital'&&value===0);path.classList.toggle('analog-active',circuit.mode==='analog'&&Number.isFinite(value));});
   for(const part of circuit.components){const element=document.querySelector(`#component-layer [data-id="${part.id}"]`);if(!element)continue;let label=element.querySelector('.simulation-value');const value=circuit.mode==='digital'?row?.[part.nodes.at(-1)]:Number.isFinite(row?.[part.nodes[0]])?(row[part.nodes[0]]-(row[part.nodes[1]]||0)):undefined;element.classList.toggle('logic-high',circuit.mode==='digital'&&value===1);element.classList.toggle('logic-low',circuit.mode==='digital'&&value===0);if(!Number.isFinite(value)){label?.remove();continue;}if(!label){label=document.createElementNS('http://www.w3.org/2000/svg','text');label.setAttribute('class','simulation-value');label.setAttribute('text-anchor','middle');element.append(label);}label.setAttribute('x',part.x);label.setAttribute('y',Math.max(part.y+70,...pinPositions(part).map(([,y])=>y+36)));label.textContent=circuit.mode==='digital'?String(value):formatValue(value,'V');}
   if(row){const selected=selectedSignals();$('sample-values').innerHTML=selected.map(n=>`<div class="sample-value"><span>${escape(n)}</span><strong>${circuit.mode==='digital'?row[n]??'—':Number.isFinite(row[n])?formatValue(row[n],'V'):'—'}</strong></div>`).join('');}else $('sample-values').replaceChildren();
   const playable=lastResult?.data?.rows&&['tick','transient'].includes(lastResult.kind);if(playable){const rows=lastResult.data.rows,index=Math.max(0,Math.min(rows.length-1,playbackIndex)),sample=rows[index];$('playback-time').textContent=`t = ${formatValue(sample.t,'s')}`;$('playback-position').value=String(index);const cursor=$('plot-playhead');if(cursor){const t0=lastResult.kind==='tick'?0:rows[0].t,span=rows.at(-1).t-t0||1,x=(lastResult.kind==='tick'?125:54)+(sample.t-t0)/span*(lastResult.kind==='tick'?595:650);cursor.setAttribute('x1',x);cursor.setAttribute('x2',x);}}
 }
+function setCircuitView(board) {
+  if (board && !boardView.available) {
+    toast('3D preview is unavailable in this browser.');
+    return;
+  }
+  multiSelection.clear();
+  selected = null;
+  clearWire();
+  $('context-menu').hidden = true;
+  $('schematic').hidden = board;
+  for (const id of ['board-view','board-overlay','board-hint']) $(id).hidden = !board;
+  $('canvas-hint').hidden = board;
+  $('view-schematic').setAttribute('aria-pressed', String(!board));
+  $('view-board').setAttribute('aria-pressed', String(board));
+  $('circuit-workspace').classList.toggle('board-active', board);
+  renderCanvas();
+  renderInspector();
+}
+$('view-schematic').onclick = () => setCircuitView(false);
+$('view-board').onclick = () => setCircuitView(true);
+$('board-zoom-out').onclick = () => boardView.zoom(.8);
+$('board-zoom-in').onclick = () => boardView.zoom(1.25);
+$('board-reset').onclick = boardView.reset;
 function selectedSignals(){if(!lastResult)return [];if(circuit.mode==='digital')return [...new Set([...circuit.components.filter(p=>p.type==='CLOCK').map(p=>p.nodes[0]),...circuit.components.filter(p=>p.type==='OUTPUT').map(p=>p.nodes[0])])].slice(0,12);return [...new Set([$('probe').value,...circuit.components.filter(p=>p.type==='PROBE').map(p=>p.nodes[0])])].filter(Boolean).slice(0,8);}
 function stopPlayback(){if(playbackFrame!==null)cancelAnimationFrame(playbackFrame);playbackFrame=null;playbackLast=null;if($('play-pause'))$('play-pause').textContent='▶ Play';}
 function setupPlayback(autoplay=true){
@@ -472,6 +521,7 @@ function renderAssistantStatus(){
   }
 }
 async function refreshAssistantStatus(){
+  if(sharedBuild)return;
   try{
     const response=await fetch('/api/status');
     if(!response.ok)throw new Error();
@@ -573,7 +623,14 @@ window.addEventListener('beforeunload',()=>{try{saveSession();}catch{/* The expo
 try{const stored=localStorage.getItem('circuit-studio-workspaces-v1');if(stored)session=validateSession(JSON.parse(stored));}catch{toast('Saved workspace data could not be opened; recovered the last circuit instead.');}
 if(!session){const initial=makeDocument(circuit.mode,circuit);session={version:1,documents:[initial],activeId:initial.id};}
 if(!localStorage.getItem('circuit-studio-v3-started')){const active=session.documents.find(d=>d.id===session.activeId),alreadyBlank=active?.kind==='analog'&&active.content.components.length===0;if(!alreadyBlank&&session.documents.length<24){const blank=makeDocument('analog',{version:1,name:'Untitled circuit',mode:'analog',components:[],wires:[]});session.documents.push(blank);session.activeId=blank.id;}localStorage.setItem('circuit-studio-v3-started','1');}
+if(sharedBuild){
+  for(const option of [...$('ai-mode').options])if(option.value!=='recipe')option.remove();
+  $('resource-form').hidden=true;
+  $('resource-search-form').hidden=true;
+  renderAssistantStatus();
+}
 openWorkspace(session.activeId,false);
+if(sharedBuild&&['analog','digital'].includes(module))setCircuitView(true);
 
 
 

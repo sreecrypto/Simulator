@@ -25,7 +25,10 @@ export function SchematicWorkspace() {
             <span className="breadcrumb">WORKSPACE / <span id="mode-label">ANALOG</span></span>
             <input id="project-name" aria-label="Project name" defaultValue="Untitled circuit" maxLength="120" />
           </div>
-          <span className="status-dot">Local project</span>
+          <div className="view-switch" role="group" aria-label="Circuit view">
+            <button id="view-schematic" type="button" aria-pressed="true">2D schematic</button>
+            <button id="view-board" type="button" aria-pressed="false">3D board</button>
+          </div>
         </div>
         <div className="toolbar">
           <button id="toggle-library" aria-pressed="false">Components</button>
@@ -58,16 +61,30 @@ export function SchematicWorkspace() {
           <svg id="schematic" viewBox="0 0 900 480" role="img" aria-label="Interactive circuit schematic">
             <defs>
               <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="0.8" fill="#d4ded9" />
+                <circle cx="1" cy="1" r="0.85" fill="#a5b8c9" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
             <g id="net-layer" />
             <g id="component-layer" />
           </svg>
+          <canvas id="board-view" tabIndex="0" aria-label="Interactive 3D circuit board"
+            aria-describedby="board-hint" hidden />
+          <div id="board-overlay" className="board-overlay" hidden>
+            <div className="board-label">
+              <strong>3D board preview</strong>
+              <span id="board-count" />
+            </div>
+            <div className="board-actions" role="group" aria-label="3D camera">
+              <button id="board-zoom-out" type="button" aria-label="Zoom out of 3D board">−</button>
+              <button id="board-zoom-in" type="button" aria-label="Zoom in on 3D board">+</button>
+              <button id="board-reset" type="button">Reset view</button>
+            </div>
+          </div>
           <div className="canvas-caption">
             <span id="canvas-hint">Drag to select · Shift adds · Space + drag to pan · Wheel to zoom</span>
-            <span>GRID 20 · SI UNITS</span>
+            <span id="board-hint" hidden>Drag to orbit · Shift + drag to pan · Wheel to zoom · Edit in 2D</span>
+            <span className="canvas-grid-label">GRID 20 · SI UNITS</span>
           </div>
         </div>
         <section className="results">

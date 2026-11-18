@@ -10,6 +10,7 @@ import '../workbench.css';
 import '../simulation-ui.css';
 import '../workspace-modes.css';
 import './workbench.css';
+import './board-view.css';
 
 function Workbench() {
   const [startupError, setStartupError] = useState('');
